@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Ménage — Immeuble 19</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
@@ -17,15 +17,11 @@
     --green: #2d6a4f;
     --green-light: #d8f3dc;
     --green-mid: #52b788;
-    --amber: #b5451b;
-    --amber-light: #fce9d8;
     --blue: #1a5276;
     --blue-light: #d6eaf8;
     --red: #922b21;
     --font-main: 'Sora', sans-serif;
     --font-mono: 'DM Mono', monospace;
-    --radius: 10px;
-    --shadow: 0 2px 12px rgba(0,0,0,0.07);
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,206 +31,183 @@
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
-    padding: 0;
   }
 
-  /* ── HEADER ── */
+  /* HEADER */
   .header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    padding: 1rem 1.5rem;
+    padding: 0.55rem 0.75rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: sticky;
     top: 0;
     z-index: 50;
-    gap: 12px;
+    gap: 8px;
   }
-  .header-left { display: flex; align-items: center; gap: 14px; }
+  .header-left { display: flex; align-items: center; gap: 8px; }
   .logo {
-    width: 38px; height: 38px;
+    width: 28px; height: 28px;
     background: var(--text);
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
-  .logo svg { width: 20px; height: 20px; }
-  .header-title { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
-  .header-sub { font-size: 12px; color: var(--text2); font-family: var(--font-mono); margin-top: 1px; }
+  .logo svg { width: 15px; height: 15px; }
+  .header-title { font-size: 12.5px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+  .header-sub { font-size: 9.5px; color: var(--text2); font-family: var(--font-mono); }
 
-  .admin-zone { display: flex; align-items: center; gap: 10px; }
+  .admin-zone { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   .admin-indicator {
-    display: none;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-family: var(--font-mono);
-    color: var(--green);
-    background: var(--green-light);
-    padding: 4px 10px;
-    border-radius: 20px;
+    display: none; align-items: center; gap: 4px;
+    font-size: 9.5px; font-family: var(--font-mono);
+    color: var(--green); background: var(--green-light);
+    padding: 3px 7px; border-radius: 20px;
   }
   .admin-indicator.visible { display: flex; }
-  .admin-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; }
+  .admin-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
 
   .btn {
-    font-family: var(--font-main);
-    font-size: 13px;
-    font-weight: 400;
-    padding: 7px 14px;
-    border-radius: 8px;
+    font-family: var(--font-main); font-size: 11px;
+    padding: 5px 9px; border-radius: 6px;
     border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text2);
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
+    background: var(--surface); color: var(--text2);
+    cursor: pointer; white-space: nowrap;
   }
-  .btn:hover { background: var(--surface2); color: var(--text); }
+  .btn:active { background: var(--surface2); }
   .btn.danger { border-color: #f5c6c3; color: var(--red); background: #fdf3f2; }
-  .btn.danger:hover { background: #fce8e7; }
 
-  /* ── STATS BAR ── */
+  /* STATS */
   .stats-bar {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    padding: 0.75rem 1.5rem;
-    display: flex;
-    gap: 1.5rem;
-    overflow-x: auto;
-    scrollbar-width: none;
+    padding: 0.35rem 0.75rem;
+    display: flex; gap: 0.9rem;
+    overflow-x: auto; scrollbar-width: none;
   }
   .stats-bar::-webkit-scrollbar { display: none; }
-  .stat { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .stat-label { font-size: 12px; color: var(--text2); font-family: var(--font-mono); }
-  .stat-val { font-size: 14px; font-weight: 600; color: var(--text); }
-  .stat-sep { width: 1px; height: 20px; background: var(--border); }
+  .stat { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .stat-label { font-size: 9.5px; color: var(--text2); font-family: var(--font-mono); }
+  .stat-val { font-size: 11.5px; font-weight: 600; color: var(--text); }
+  .stat-sep { width: 1px; height: 14px; background: var(--border); }
 
-  /* ── MAIN CONTENT ── */
-  .main { padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
+  /* MAIN */
+  .main { padding: 0.4rem; }
 
-  /* ── NOTICE BAND ── */
   .notice {
-    background: var(--blue-light);
-    border: 1px solid #a9cce3;
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    font-size: 13px;
-    color: var(--blue);
-    margin-bottom: 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    background: var(--blue-light); border: 1px solid #a9cce3;
+    border-radius: 7px; padding: 6px 9px;
+    font-size: 10.5px; color: var(--blue);
+    margin-bottom: 0.4rem;
+    display: flex; align-items: flex-start; gap: 5px; line-height: 1.4;
   }
-  .notice svg { flex-shrink: 0; }
+  .notice svg { flex-shrink: 0; margin-top: 1px; }
 
-  /* ── TABLE WRAPPER ── */
+  /* TABLE */
   .table-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
+    border-radius: 9px; overflow: hidden;
   }
-  .table-scroll { overflow-x: auto; }
 
-  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 680px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  /* Apt column fixed, months share the rest equally */
+  col.col-apt   { width: 32px; }
+  col.col-month { width: calc((100% - 32px) / 8); }
 
   thead th {
     background: var(--surface2);
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 7px;
     font-weight: 500;
     color: var(--text2);
-    padding: 10px 12px;
+    padding: 4px 1px;
     text-align: center;
     border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    line-height: 1.25;
   }
-  thead th:first-child { text-align: left; width: 80px; position: sticky; left: 0; background: var(--surface2); z-index: 2; }
+  thead th:first-child { font-size: 7.5px; }
 
-  tbody tr { transition: background 0.1s; }
-  tbody tr:hover { background: #faf9f7; }
-  tbody tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
+  tbody tr:not(:last-child) td { border-bottom: 1px solid #ece9e3; }
+  tbody tr:nth-child(even) { background: #faf9f7; }
+  tbody tr:nth-child(even) td:first-child { background: #faf9f7; }
 
   tbody td {
-    padding: 7px 12px;
+    padding: 2.5px 1px;
     text-align: center;
     vertical-align: middle;
+    overflow: hidden;
   }
   tbody td:first-child {
-    text-align: left;
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 8px;
     font-weight: 500;
     color: var(--text);
-    position: sticky;
-    left: 0;
-    background: var(--surface);
-    z-index: 1;
     border-right: 1px solid var(--border);
+    padding: 2.5px 1px;
+    line-height: 1;
+    background: var(--surface);
   }
-  tbody tr:hover td:first-child { background: #faf9f7; }
 
-  /* ── CELL BUTTON ── */
+  /* CELL BUTTON */
   .cell-btn {
-    width: 30px; height: 30px;
-    border-radius: 8px;
+    width: 21px; height: 21px;
+    border-radius: 5px;
     border: 1.5px solid var(--border);
     background: transparent;
     cursor: default;
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-    position: relative;
+    align-items: center; justify-content: center;
+    transition: background 0.1s, border-color 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
   .cell-btn.admin { cursor: pointer; }
-  .cell-btn.admin:hover { border-color: var(--green-mid); background: var(--green-light); }
-  .cell-btn.paid {
-    background: var(--green);
-    border-color: var(--green);
-  }
-  .cell-btn.paid:hover { background: #245c43; border-color: #245c43; }
+  .cell-btn.admin:active { border-color: var(--green-mid); background: var(--green-light); transform: scale(0.92); }
+  .cell-btn.paid { background: var(--green); border-color: var(--green); }
   .cell-btn svg { display: none; }
   .cell-btn.paid svg { display: block; }
 
-  /* ── LEGEND ── */
+  /* SUMMARY ROW */
+  .summary-row td {
+    background: var(--surface2) !important;
+    font-family: var(--font-mono);
+    font-size: 7.5px; color: var(--text2);
+    padding: 3.5px 1px;
+    border-top: 1px solid var(--border);
+    font-weight: 500;
+  }
+
+  /* LEGEND */
   .legend {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 10px;
     border-top: 1px solid var(--border);
     background: var(--surface2);
   }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
-  .ldot { width: 10px; height: 10px; border-radius: 3px; }
+  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 9.5px; color: var(--text2); }
+  .ldot { width: 8px; height: 8px; border-radius: 2px; }
+  .last-upd { margin-left: auto; font-size: 8.5px; color: var(--text3); font-family: var(--font-mono); }
 
-  /* ── MODAL OVERLAY ── */
+  /* MODAL */
   .modal-wrap {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(26,25,22,0.5);
-    backdrop-filter: blur(3px);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
+    display: none; position: fixed; inset: 0;
+    background: rgba(26,25,22,0.5); backdrop-filter: blur(3px);
+    z-index: 200; align-items: center; justify-content: center; padding: 1rem;
   }
   .modal-wrap.open { display: flex; }
   .modal {
-    background: var(--surface);
-    border-radius: 14px;
+    background: var(--surface); border-radius: 14px;
     border: 1px solid var(--border);
     box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    padding: 1.75rem;
-    width: 100%;
-    max-width: 340px;
+    padding: 1.5rem; width: 100%; max-width: 320px;
     animation: modalIn 0.2s ease;
   }
   @keyframes modalIn {
@@ -242,150 +215,94 @@
     to   { transform: translateY(0) scale(1); opacity: 1; }
   }
   .modal-icon {
-    width: 44px; height: 44px;
-    background: var(--surface2);
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 1rem;
+    width: 40px; height: 40px; background: var(--surface2);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 0.75rem;
   }
-  .modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-  .modal p { font-size: 13px; color: var(--text2); margin-bottom: 1.25rem; line-height: 1.5; }
+  .modal h2 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .modal p  { font-size: 12px; color: var(--text2); margin-bottom: 1rem; line-height: 1.5; }
   .modal input {
-    width: 100%;
-    font-family: var(--font-mono);
-    font-size: 14px;
-    padding: 10px 12px;
-    border-radius: 8px;
+    width: 100%; font-family: var(--font-mono); font-size: 14px;
+    padding: 10px 12px; border-radius: 8px;
     border: 1.5px solid var(--border);
-    background: var(--surface2);
-    color: var(--text);
-    outline: none;
-    margin-bottom: 8px;
-    transition: border-color 0.15s;
+    background: var(--surface2); color: var(--text);
+    outline: none; margin-bottom: 6px;
   }
   .modal input:focus { border-color: #999; }
   .modal input.error { border-color: #e74c3c; background: #fdf3f2; }
-  .error-msg { font-size: 12px; color: var(--red); margin-bottom: 10px; display: none; }
-  .modal-btns { display: flex; gap: 8px; margin-top: 6px; }
-  .modal-btns button { flex: 1; padding: 10px; border-radius: 8px; font-family: var(--font-main); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .error-msg { font-size: 11px; color: var(--red); margin-bottom: 8px; display: none; }
+  .modal-btns { display: flex; gap: 8px; margin-top: 4px; }
+  .modal-btns button {
+    flex: 1; padding: 10px; border-radius: 8px;
+    font-family: var(--font-main); font-size: 13px; font-weight: 500; cursor: pointer;
+  }
   .btn-cancel-modal { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
-  .btn-cancel-modal:hover { background: var(--border); }
   .btn-confirm-modal { background: var(--text); border: 1px solid var(--text); color: #fff; }
-  .btn-confirm-modal:hover { background: #333; }
-
-  /* ── MONTH SUMMARY ROW ── */
-  .summary-row td {
-    background: var(--surface2) !important;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text2);
-    padding: 5px 12px;
-    border-top: 1px solid var(--border);
-  }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 600px) {
-    .header { padding: 0.75rem 1rem; }
-    .main { padding: 1rem; }
-    .stats-bar { padding: 0.6rem 1rem; gap: 1rem; }
-    .header-title { font-size: 14px; }
-  }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header class="header">
   <div class="header-left">
     <div class="logo">
-      <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="2" width="7" height="7" rx="1.5" fill="white" opacity="0.9"/>
-        <rect x="11" y="2" width="7" height="7" rx="1.5" fill="white" opacity="0.5"/>
-        <rect x="2" y="11" width="7" height="7" rx="1.5" fill="white" opacity="0.5"/>
-        <rect x="11" y="11" width="7" height="7" rx="1.5" fill="white" opacity="0.9"/>
-      </svg>
+      <svg viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="7" height="7" rx="1.5" fill="white" opacity="0.9"/><rect x="11" y="2" width="7" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="2" y="11" width="7" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="11" y="11" width="7" height="7" rx="1.5" fill="white" opacity="0.9"/></svg>
     </div>
     <div>
       <div class="header-title">Immeuble 19 — Ménage</div>
-      <div class="header-sub">Suivi des paiements 2026</div>
+      <div class="header-sub">Suivi paiements 2026</div>
     </div>
   </div>
   <div class="admin-zone">
     <div class="admin-indicator" id="admin-indicator">
-      <div class="admin-dot"></div>
-      Mode admin
+      <div class="admin-dot"></div>Admin
     </div>
     <button class="btn" id="admin-btn" onclick="handleAdminBtn()">Connexion admin</button>
   </div>
 </header>
 
-<!-- STATS BAR -->
 <div class="stats-bar">
-  <div class="stat">
-    <span class="stat-label">Payés</span>
-    <span class="stat-val" id="s-paid">0</span>
-  </div>
+  <div class="stat"><span class="stat-label">Payés</span><span class="stat-val" id="s-paid">0</span></div>
   <div class="stat-sep"></div>
-  <div class="stat">
-    <span class="stat-label">En attente</span>
-    <span class="stat-val" id="s-pending">136</span>
-  </div>
+  <div class="stat"><span class="stat-label">En attente</span><span class="stat-val" id="s-pending">136</span></div>
   <div class="stat-sep"></div>
-  <div class="stat">
-    <span class="stat-label">Taux global</span>
-    <span class="stat-val" id="s-rate">0%</span>
-  </div>
+  <div class="stat"><span class="stat-label">Taux</span><span class="stat-val" id="s-rate">0%</span></div>
   <div class="stat-sep"></div>
-  <div class="stat">
-    <span class="stat-label">Ce mois</span>
-    <span class="stat-val" id="s-month">—</span>
-  </div>
+  <div class="stat"><span class="stat-label">Ce mois</span><span class="stat-val" id="s-month">—</span></div>
 </div>
 
-<!-- MAIN -->
 <main class="main">
-
   <div class="notice">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#1a5276" stroke-width="1.2"/><path d="M8 7v4M8 5h.01" stroke="#1a5276" stroke-width="1.4" stroke-linecap="round"/></svg>
-    Les habitants peuvent consulter ce tableau librement. Seul l'administrateur peut cocher les paiements.
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#1a5276" stroke-width="1.2"/><path d="M8 7v4M8 5h.01" stroke="#1a5276" stroke-width="1.4" stroke-linecap="round"/></svg>
+    Consultation libre — seul l'admin peut cocher les paiements.
   </div>
 
   <div class="table-card">
-    <div class="table-scroll">
-      <table id="main-table">
-        <thead>
-          <tr id="thead-row">
-            <th>APT</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
+    <table id="main-table">
+      <colgroup>
+        <col class="col-apt">
+        <col class="col-month"><col class="col-month"><col class="col-month"><col class="col-month">
+        <col class="col-month"><col class="col-month"><col class="col-month"><col class="col-month">
+      </colgroup>
+      <thead><tr id="thead-row"></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
     <div class="legend">
-      <div class="legend-item">
-        <div class="ldot" style="background:var(--green);"></div>
-        Payé
-      </div>
-      <div class="legend-item">
-        <div class="ldot" style="border:1.5px solid var(--border);"></div>
-        Non payé
-      </div>
-      <div style="margin-left:auto;font-size:12px;color:var(--text3);font-family:var(--font-mono);" id="last-update"></div>
+      <div class="legend-item"><div class="ldot" style="background:var(--green)"></div>Payé</div>
+      <div class="legend-item"><div class="ldot" style="border:1.5px solid var(--border)"></div>Non payé</div>
+      <span class="last-upd" id="last-update"></span>
     </div>
   </div>
-
 </main>
 
-<!-- MODAL LOGIN -->
 <div class="modal-wrap" id="modal">
   <div class="modal">
     <div class="modal-icon">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="4" y="9" width="14" height="11" rx="2.5" stroke="#1a1916" stroke-width="1.4"/><path d="M7.5 9V6.5a3.5 3.5 0 017 0V9" stroke="#1a1916" stroke-width="1.4" stroke-linecap="round"/><circle cx="11" cy="14.5" r="1.5" fill="#1a1916"/></svg>
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="4" y="9" width="14" height="11" rx="2.5" stroke="#1a1916" stroke-width="1.4"/><path d="M7.5 9V6.5a3.5 3.5 0 017 0V9" stroke="#1a1916" stroke-width="1.4" stroke-linecap="round"/><circle cx="11" cy="14.5" r="1.5" fill="#1a1916"/></svg>
     </div>
     <h2>Connexion administrateur</h2>
     <p>Entrez le mot de passe pour activer le mode édition.</p>
     <input type="password" id="pwd-input" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') confirmLogin()">
-    <div class="error-msg" id="error-msg">Mot de passe incorrect. Réessayez.</div>
+    <div class="error-msg" id="error-msg">Mot de passe incorrect.</div>
     <div class="modal-btns">
       <button class="btn-cancel-modal" onclick="closeModal()">Annuler</button>
       <button class="btn-confirm-modal" onclick="confirmLogin()">Confirmer</button>
@@ -394,34 +311,26 @@
 </div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────
 const ADMIN_PWD   = "menage2026"; // ← CHANGEZ CE MOT DE PASSE
 const STORAGE_KEY = "menage_imm19_2026";
-const MONTHS = ["Mai 26","Juin 26","Juil 26","Août 26","Sept 26","Oct 26","Nov 26","Déc 26"];
-const MONTH_KEYS = ["mai","juin","juil","aout","sept","oct","nov","dec"];
-const APTS = Array.from({length:17}, (_,i)=>"Apt "+(i+1));
+const MONTHS_HDR  = ["MAI","JUIN","JUIL","AOÛ","SEP","OCT","NOV","DÉC"];
+const MONTHS_FULL = ["Mai 26","Juin 26","Juil 26","Août 26","Sept 26","Oct 26","Nov 26","Déc 26"];
+const MONTH_KEYS  = ["mai","juin","juil","aout","sept","oct","nov","dec"];
+const APTS = Array.from({length:17}, (_,i) => "Apt "+(i+1));
 
-// ── STATE ───────────────────────────────────────────────
 let isAdmin = false;
-let paid    = {};   // key: "apt_X__mois" → true/false
+let paid    = {};
 
-// ── STORAGE ─────────────────────────────────────────────
 function loadData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      paid = parsed.paid || {};
-    }
+    if (raw) paid = JSON.parse(raw).paid || {};
   } catch(e) { paid = {}; }
 }
 
 function saveData() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      paid,
-      updated: new Date().toISOString()
-    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ paid, updated: new Date().toISOString() }));
     showLastUpdate();
   } catch(e) {}
 }
@@ -433,45 +342,52 @@ function showLastUpdate() {
     const { updated } = JSON.parse(raw);
     if (!updated) return;
     const d = new Date(updated);
-    const fmt = d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'});
-    document.getElementById('last-update').textContent = 'Mis à jour : ' + fmt;
+    document.getElementById('last-update').textContent =
+      d.toLocaleDateString('fr-FR') + ' ' +
+      d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
   } catch(e) {}
 }
 
-// ── RENDER ──────────────────────────────────────────────
 function cellKey(apt, mKey) { return apt.replace(' ','_') + '__' + mKey; }
 
 function buildTable() {
   // Header
   const theadRow = document.getElementById('thead-row');
   theadRow.innerHTML = '<th>APT</th>';
-  MONTHS.forEach(m => {
+  MONTHS_HDR.forEach((m, i) => {
     const th = document.createElement('th');
-    th.textContent = m;
+    th.innerHTML = m + '<br><span style="opacity:0.55">26</span>';
     theadRow.appendChild(th);
   });
 
-  // Body
+  // Rows
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
 
-  APTS.forEach(apt => {
+  APTS.forEach((apt, aptIdx) => {
     const tr = document.createElement('tr');
-    // Apt label
+
     const tdLabel = document.createElement('td');
-    tdLabel.textContent = apt;
+    // Compact: "A\n1" stacked
+    tdLabel.innerHTML = '<span style="display:block;opacity:0.55">A</span><span style="display:block">' + (aptIdx+1) + '</span>';
     tr.appendChild(tdLabel);
-    // Month cells
-    MONTH_KEYS.forEach((mKey, idx) => {
+
+    MONTH_KEYS.forEach((mKey, mIdx) => {
       const td  = document.createElement('td');
       const btn = document.createElement('button');
       const k   = cellKey(apt, mKey);
       const isPaid = !!paid[k];
       btn.className = 'cell-btn' + (isPaid ? ' paid' : '') + (isAdmin ? ' admin' : '');
-      btn.title     = isPaid ? 'Payé — cliquer pour annuler' : 'Non payé — cliquer pour marquer payé';
-      btn.setAttribute('aria-label', apt + ' ' + MONTHS[idx] + (isPaid?' payé':' non payé'));
-      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><polyline points="1.5,6.5 5,10 11.5,3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      btn.onclick = () => toggleCell(apt, mKey, btn, k);
+      btn.setAttribute('aria-label', apt + ' ' + MONTHS_FULL[mIdx] + (isPaid ? ' payé' : ' non payé'));
+      btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 13 13" fill="none"><polyline points="1.5,6.5 5,10 11.5,3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      btn.onclick = () => {
+        if (!isAdmin) return;
+        paid[k] = !paid[k];
+        btn.classList.toggle('paid', !!paid[k]);
+        saveData();
+        updateStats();
+        updateSummaryRow();
+      };
       td.appendChild(btn);
       tr.appendChild(td);
     });
@@ -479,69 +395,42 @@ function buildTable() {
   });
 
   // Summary row
-  const sumTr = document.createElement('tr');
-  sumTr.className = 'summary-row';
-  const sumLabel = document.createElement('td');
-  sumLabel.textContent = 'TOTAL';
-  sumTr.appendChild(sumLabel);
+  const sumRow = document.createElement('tr');
+  sumRow.className = 'summary-row';
+  const lbl = document.createElement('td');
+  lbl.textContent = '∑';
+  sumRow.appendChild(lbl);
   MONTH_KEYS.forEach(mKey => {
     const td = document.createElement('td');
-    const count = APTS.filter(apt => !!paid[cellKey(apt, mKey)]).length;
-    td.textContent = count + '/' + APTS.length;
-    sumTr.appendChild(td);
+    td.textContent = APTS.filter(a => !!paid[cellKey(a, mKey)]).length + '/' + APTS.length;
+    sumRow.appendChild(td);
   });
-  tbody.appendChild(sumTr);
+  tbody.appendChild(sumRow);
 
   updateStats();
-}
-
-function toggleCell(apt, mKey, btn, k) {
-  if (!isAdmin) return;
-  paid[k] = !paid[k];
-  btn.classList.toggle('paid', !!paid[k]);
-  btn.title = paid[k] ? 'Payé — cliquer pour annuler' : 'Non payé — cliquer pour marquer payé';
-  saveData();
-  updateStats();
-  updateSummaryRow();
 }
 
 function updateSummaryRow() {
-  const rows = document.querySelectorAll('#tbody tr.summary-row td');
-  if (!rows.length) return;
+  const cells = document.querySelectorAll('#tbody tr.summary-row td');
   MONTH_KEYS.forEach((mKey, idx) => {
-    const count = APTS.filter(apt => !!paid[cellKey(apt, mKey)]).length;
-    rows[idx+1].textContent = count + '/' + APTS.length;
+    cells[idx+1].textContent = APTS.filter(a => !!paid[cellKey(a, mKey)]).length + '/' + APTS.length;
   });
 }
 
 function updateStats() {
-  const total     = APTS.length * MONTHS.length;
+  const total     = APTS.length * MONTH_KEYS.length;
   const paidCount = Object.values(paid).filter(Boolean).length;
-  const pending   = total - paidCount;
-  const rate      = Math.round(paidCount / total * 100);
-
   document.getElementById('s-paid').textContent    = paidCount;
-  document.getElementById('s-pending').textContent = pending;
-  document.getElementById('s-rate').textContent    = rate + '%';
-
-  // Current month (based on real date)
-  const now    = new Date();
-  const monthIdx = now.getMonth(); // 0-based: Jan=0, May=4
-  const mKey   = MONTH_KEYS[monthIdx - 4]; // May=index 0 in our array
-  if (mKey) {
-    const monthPaid = APTS.filter(apt => !!paid[cellKey(apt, mKey)]).length;
-    document.getElementById('s-month').textContent = monthPaid + '/' + APTS.length + ' payés';
+  document.getElementById('s-pending').textContent = total - paidCount;
+  document.getElementById('s-rate').textContent    = Math.round(paidCount / total * 100) + '%';
+  const mIdx = new Date().getMonth() - 4;
+  if (mIdx >= 0 && mIdx < MONTH_KEYS.length) {
+    const c = APTS.filter(a => !!paid[cellKey(a, MONTH_KEYS[mIdx])]).length;
+    document.getElementById('s-month').textContent = c + '/' + APTS.length;
   }
 }
 
-// ── ADMIN ───────────────────────────────────────────────
-function handleAdminBtn() {
-  if (isAdmin) {
-    logout();
-  } else {
-    openModal();
-  }
-}
+function handleAdminBtn() { isAdmin ? logout() : openModal(); }
 
 function openModal() {
   document.getElementById('modal').classList.add('open');
@@ -550,14 +439,10 @@ function openModal() {
   document.getElementById('pwd-input').classList.remove('error');
   setTimeout(() => document.getElementById('pwd-input').focus(), 100);
 }
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
 
 function confirmLogin() {
-  const val = document.getElementById('pwd-input').value;
-  if (val === ADMIN_PWD) {
+  if (document.getElementById('pwd-input').value === ADMIN_PWD) {
     isAdmin = true;
     closeModal();
     document.getElementById('admin-btn').textContent = 'Déconnexion';
@@ -580,12 +465,10 @@ function logout() {
   buildTable();
 }
 
-// Close modal on backdrop click
 document.getElementById('modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
-// ── INIT ────────────────────────────────────────────────
 loadData();
 buildTable();
 showLastUpdate();
