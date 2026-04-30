@@ -23,36 +23,20 @@
     --font-main: 'Sora', sans-serif;
     --font-mono: 'DM Mono', monospace;
   }
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: var(--font-main);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
+  body { font-family: var(--font-main); background: var(--bg); color: var(--text); min-height: 100vh; }
 
   /* HEADER */
   .header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
+    background: var(--surface); border-bottom: 1px solid var(--border);
     padding: 0.55rem 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    gap: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50; gap: 8px;
   }
   .header-left { display: flex; align-items: center; gap: 8px; }
   .logo {
-    width: 28px; height: 28px;
-    background: var(--text);
-    border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+    width: 28px; height: 28px; background: var(--text);
+    border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .logo svg { width: 15px; height: 15px; }
   .header-title { font-size: 12.5px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
@@ -69,21 +53,17 @@
   .admin-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
 
   .btn {
-    font-family: var(--font-main); font-size: 11px;
-    padding: 5px 9px; border-radius: 6px;
-    border: 1px solid var(--border);
-    background: var(--surface); color: var(--text2);
-    cursor: pointer; white-space: nowrap;
+    font-family: var(--font-main); font-size: 11px; padding: 5px 9px;
+    border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text2); cursor: pointer; white-space: nowrap;
   }
   .btn:active { background: var(--surface2); }
   .btn.danger { border-color: #f5c6c3; color: var(--red); background: #fdf3f2; }
 
   /* STATS */
   .stats-bar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0.35rem 0.75rem;
-    display: flex; gap: 0.9rem;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0.35rem 0.75rem; display: flex; gap: 0.9rem;
     overflow-x: auto; scrollbar-width: none;
   }
   .stats-bar::-webkit-scrollbar { display: none; }
@@ -92,46 +72,48 @@
   .stat-val { font-size: 11.5px; font-weight: 600; color: var(--text); }
   .stat-sep { width: 1px; height: 14px; background: var(--border); }
 
+  /* SYNC STATUS */
+  .sync-bar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0.3rem 0.75rem;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10px; font-family: var(--font-mono); color: var(--text2);
+  }
+  .sync-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text3); flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .sync-dot.syncing { background: #e6a817; animation: pulse 0.8s ease-in-out infinite; }
+  .sync-dot.ok      { background: var(--green); }
+  .sync-dot.error   { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
   /* MAIN */
   .main { padding: 0.4rem; }
 
   .notice {
     background: var(--blue-light); border: 1px solid #a9cce3;
-    border-radius: 7px; padding: 6px 9px;
-    font-size: 10.5px; color: var(--blue);
-    margin-bottom: 0.4rem;
-    display: flex; align-items: flex-start; gap: 5px; line-height: 1.4;
+    border-radius: 7px; padding: 6px 9px; font-size: 10.5px; color: var(--blue);
+    margin-bottom: 0.4rem; display: flex; align-items: flex-start; gap: 5px; line-height: 1.4;
   }
   .notice svg { flex-shrink: 0; margin-top: 1px; }
 
   /* TABLE */
   .table-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--surface); border: 1px solid var(--border);
     border-radius: 9px; overflow: hidden;
   }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-  }
-
-  /* Apt column fixed, months share the rest equally */
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
   col.col-apt   { width: 32px; }
   col.col-month { width: calc((100% - 32px) / 8); }
 
   thead th {
-    background: var(--surface2);
-    font-family: var(--font-mono);
-    font-size: 7px;
-    font-weight: 500;
-    color: var(--text2);
-    padding: 4px 1px;
-    text-align: center;
+    background: var(--surface2); font-family: var(--font-mono);
+    font-size: 7px; font-weight: 500; color: var(--text2);
+    padding: 4px 1px; text-align: center;
     border-bottom: 1px solid var(--border);
-    letter-spacing: 0.01em;
-    line-height: 1.25;
+    letter-spacing: 0.01em; line-height: 1.25;
   }
   thead th:first-child { font-size: 7.5px; }
 
@@ -139,62 +121,58 @@
   tbody tr:nth-child(even) { background: #faf9f7; }
   tbody tr:nth-child(even) td:first-child { background: #faf9f7; }
 
-  tbody td {
-    padding: 2.5px 1px;
-    text-align: center;
-    vertical-align: middle;
-    overflow: hidden;
-  }
+  tbody td { padding: 2.5px 1px; text-align: center; vertical-align: middle; overflow: hidden; }
   tbody td:first-child {
-    font-family: var(--font-mono);
-    font-size: 8px;
-    font-weight: 500;
-    color: var(--text);
-    border-right: 1px solid var(--border);
-    padding: 2.5px 1px;
-    line-height: 1;
-    background: var(--surface);
+    font-family: var(--font-mono); font-size: 8px; font-weight: 500; color: var(--text);
+    border-right: 1px solid var(--border); padding: 2.5px 1px;
+    line-height: 1; background: var(--surface);
   }
 
   /* CELL BUTTON */
   .cell-btn {
-    width: 21px; height: 21px;
-    border-radius: 5px;
-    border: 1.5px solid var(--border);
-    background: transparent;
-    cursor: default;
-    display: inline-flex;
-    align-items: center; justify-content: center;
+    width: 21px; height: 21px; border-radius: 5px;
+    border: 1.5px solid var(--border); background: transparent;
+    cursor: default; display: inline-flex; align-items: center; justify-content: center;
     transition: background 0.1s, border-color 0.1s;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   }
   .cell-btn.admin { cursor: pointer; }
   .cell-btn.admin:active { border-color: var(--green-mid); background: var(--green-light); transform: scale(0.92); }
   .cell-btn.paid { background: var(--green); border-color: var(--green); }
+  .cell-btn.saving { opacity: 0.6; pointer-events: none; }
   .cell-btn svg { display: none; }
   .cell-btn.paid svg { display: block; }
 
   /* SUMMARY ROW */
   .summary-row td {
-    background: var(--surface2) !important;
-    font-family: var(--font-mono);
+    background: var(--surface2) !important; font-family: var(--font-mono);
     font-size: 7.5px; color: var(--text2);
-    padding: 3.5px 1px;
-    border-top: 1px solid var(--border);
-    font-weight: 500;
+    padding: 3.5px 1px; border-top: 1px solid var(--border); font-weight: 500;
   }
 
   /* LEGEND */
   .legend {
     display: flex; align-items: center; gap: 10px;
-    padding: 6px 10px;
-    border-top: 1px solid var(--border);
-    background: var(--surface2);
+    padding: 6px 10px; border-top: 1px solid var(--border); background: var(--surface2);
   }
   .legend-item { display: flex; align-items: center; gap: 4px; font-size: 9.5px; color: var(--text2); }
   .ldot { width: 8px; height: 8px; border-radius: 2px; }
   .last-upd { margin-left: auto; font-size: 8.5px; color: var(--text3); font-family: var(--font-mono); }
+
+  /* LOADING OVERLAY */
+  .loading-overlay {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 300; gap: 12px;
+  }
+  .loading-overlay.hidden { display: none; }
+  .loading-spinner {
+    width: 28px; height: 28px; border: 2px solid var(--border);
+    border-top-color: var(--green); border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 12px; color: var(--text2); font-family: var(--font-mono); }
 
   /* MODAL */
   .modal-wrap {
@@ -204,8 +182,7 @@
   }
   .modal-wrap.open { display: flex; }
   .modal {
-    background: var(--surface); border-radius: 14px;
-    border: 1px solid var(--border);
+    background: var(--surface); border-radius: 14px; border: 1px solid var(--border);
     box-shadow: 0 20px 60px rgba(0,0,0,0.2);
     padding: 1.5rem; width: 100%; max-width: 320px;
     animation: modalIn 0.2s ease;
@@ -223,10 +200,8 @@
   .modal p  { font-size: 12px; color: var(--text2); margin-bottom: 1rem; line-height: 1.5; }
   .modal input {
     width: 100%; font-family: var(--font-mono); font-size: 14px;
-    padding: 10px 12px; border-radius: 8px;
-    border: 1.5px solid var(--border);
-    background: var(--surface2); color: var(--text);
-    outline: none; margin-bottom: 6px;
+    padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--border);
+    background: var(--surface2); color: var(--text); outline: none; margin-bottom: 6px;
   }
   .modal input:focus { border-color: #999; }
   .modal input.error { border-color: #e74c3c; background: #fdf3f2; }
@@ -241,6 +216,12 @@
 </style>
 </head>
 <body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Chargement des données...</div>
+</div>
 
 <header class="header">
   <div class="header-left">
@@ -268,6 +249,11 @@
   <div class="stat"><span class="stat-label">Taux</span><span class="stat-val" id="s-rate">0%</span></div>
   <div class="stat-sep"></div>
   <div class="stat"><span class="stat-label">Ce mois</span><span class="stat-val" id="s-month">—</span></div>
+</div>
+
+<div class="sync-bar">
+  <div class="sync-dot" id="sync-dot"></div>
+  <span id="sync-label">Connexion...</span>
 </div>
 
 <main class="main">
@@ -311,8 +297,12 @@
 </div>
 
 <script>
-const ADMIN_PWD   = "menage2026"; // ← CHANGEZ CE MOT DE PASSE
-const STORAGE_KEY = "menage_imm19_2026";
+// ── CONFIG ───────────────────────────────────────────────────
+const ADMIN_PWD  = "menage2026";      // ← CHANGEZ CE MOT DE PASSE
+const BIN_ID     = "69f3de36aaba882197594807";
+const MASTER_KEY = "$2a$10$H2OJo1HHGFHY3fXn2NZMIuztank.ILbzBlwvpGbh9kmKmE0EKckQi";
+const API_URL    = "https://api.jsonbin.io/v3/b/" + BIN_ID;
+
 const MONTHS_HDR  = ["MAI","JUIN","JUIL","AOÛ","SEP","OCT","NOV","DÉC"];
 const MONTHS_FULL = ["Mai 26","Juin 26","Juil 26","Août 26","Sept 26","Oct 26","Nov 26","Déc 26"];
 const MONTH_KEYS  = ["mai","juin","juil","aout","sept","oct","nov","dec"];
@@ -320,55 +310,93 @@ const APTS = Array.from({length:17}, (_,i) => "Apt "+(i+1));
 
 let isAdmin = false;
 let paid    = {};
+let isSaving = false;
 
-function loadData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) paid = JSON.parse(raw).paid || {};
-  } catch(e) { paid = {}; }
+// ── SYNC STATUS ──────────────────────────────────────────────
+function setSyncStatus(state, label) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  dot.className = 'sync-dot ' + state;
+  lbl.textContent = label;
 }
 
-function saveData() {
+// ── JSONBIN API ──────────────────────────────────────────────
+async function loadFromCloud() {
+  setSyncStatus('syncing', 'Chargement...');
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ paid, updated: new Date().toISOString() }));
-    showLastUpdate();
-  } catch(e) {}
+    const res = await fetch(API_URL + '/latest', {
+      headers: { 'X-Master-Key': MASTER_KEY }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    paid = data.record.paid || {};
+    setSyncStatus('ok', 'Synchronisé');
+    showLastUpdate(data.record.updated);
+  } catch(e) {
+    setSyncStatus('error', 'Erreur de connexion — données locales');
+    // Fallback to localStorage
+    try {
+      const raw = localStorage.getItem('menage_imm19_fallback');
+      if (raw) paid = JSON.parse(raw).paid || {};
+    } catch(e2) {}
+  }
+  document.getElementById('loading').classList.add('hidden');
+  buildTable();
 }
 
-function showLastUpdate() {
+async function saveToCloud() {
+  if (isSaving) return;
+  isSaving = true;
+  setSyncStatus('syncing', 'Sauvegarde...');
+  // Optimistic local backup
+  try { localStorage.setItem('menage_imm19_fallback', JSON.stringify({paid})); } catch(e) {}
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const { updated } = JSON.parse(raw);
-    if (!updated) return;
-    const d = new Date(updated);
+    const now = new Date().toISOString();
+    const res = await fetch(API_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': MASTER_KEY
+      },
+      body: JSON.stringify({ paid, updated: now })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    setSyncStatus('ok', 'Sauvegardé');
+    showLastUpdate(now);
+  } catch(e) {
+    setSyncStatus('error', 'Erreur — réessayez');
+  }
+  isSaving = false;
+}
+
+function showLastUpdate(iso) {
+  if (!iso) return;
+  try {
+    const d = new Date(iso);
     document.getElementById('last-update').textContent =
       d.toLocaleDateString('fr-FR') + ' ' +
-      d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
   } catch(e) {}
 }
 
+// ── TABLE ────────────────────────────────────────────────────
 function cellKey(apt, mKey) { return apt.replace(' ','_') + '__' + mKey; }
 
 function buildTable() {
-  // Header
   const theadRow = document.getElementById('thead-row');
   theadRow.innerHTML = '<th>APT</th>';
-  MONTHS_HDR.forEach((m, i) => {
+  MONTHS_HDR.forEach(m => {
     const th = document.createElement('th');
     th.innerHTML = m + '<br><span style="opacity:0.55">26</span>';
     theadRow.appendChild(th);
   });
 
-  // Rows
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
 
   APTS.forEach((apt, aptIdx) => {
     const tr = document.createElement('tr');
-
     const tdLabel = document.createElement('td');
-    // Compact: "A\n1" stacked
     tdLabel.innerHTML = '<span style="display:block;opacity:0.55">A</span><span style="display:block">' + (aptIdx+1) + '</span>';
     tr.appendChild(tdLabel);
 
@@ -380,13 +408,13 @@ function buildTable() {
       btn.className = 'cell-btn' + (isPaid ? ' paid' : '') + (isAdmin ? ' admin' : '');
       btn.setAttribute('aria-label', apt + ' ' + MONTHS_FULL[mIdx] + (isPaid ? ' payé' : ' non payé'));
       btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 13 13" fill="none"><polyline points="1.5,6.5 5,10 11.5,3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      btn.onclick = () => {
-        if (!isAdmin) return;
+      btn.onclick = async () => {
+        if (!isAdmin || isSaving) return;
         paid[k] = !paid[k];
         btn.classList.toggle('paid', !!paid[k]);
-        saveData();
         updateStats();
         updateSummaryRow();
+        await saveToCloud();
       };
       td.appendChild(btn);
       tr.appendChild(td);
@@ -430,6 +458,7 @@ function updateStats() {
   }
 }
 
+// ── ADMIN ────────────────────────────────────────────────────
 function handleAdminBtn() { isAdmin ? logout() : openModal(); }
 
 function openModal() {
@@ -469,9 +498,28 @@ document.getElementById('modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
-loadData();
-buildTable();
-showLastUpdate();
+// ── AUTO-REFRESH toutes les 60s pour les habitants ───────────
+setInterval(async () => {
+  if (!isAdmin) {
+    setSyncStatus('syncing', 'Actualisation...');
+    try {
+      const res = await fetch(API_URL + '/latest', {
+        headers: { 'X-Master-Key': MASTER_KEY }
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      paid = data.record.paid || {};
+      setSyncStatus('ok', 'Synchronisé');
+      showLastUpdate(data.record.updated);
+      buildTable();
+    } catch(e) {
+      setSyncStatus('error', 'Hors ligne');
+    }
+  }
+}, 60000);
+
+// ── INIT ─────────────────────────────────────────────────────
+loadFromCloud();
 </script>
 </body>
 </html>
