@@ -7,221 +7,102 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f5f3ee;
-    --surface: #ffffff;
-    --surface2: #f0ede6;
-    --border: #ddd9d0;
-    --text: #1a1916;
-    --text2: #6b6760;
-    --text3: #a8a49e;
-    --green: #2d6a4f;
-    --green-light: #d8f3dc;
-    --green-mid: #52b788;
-    --blue: #1a5276;
-    --blue-light: #d6eaf8;
-    --red: #922b21;
-    --font-main: 'Sora', sans-serif;
-    --font-mono: 'DM Mono', monospace;
+    --bg: #f5f3ee; --surface: #ffffff; --surface2: #f0ede6;
+    --border: #ddd9d0; --text: #1a1916; --text2: #6b6760; --text3: #a8a49e;
+    --green: #2d6a4f; --green-light: #d8f3dc; --green-mid: #52b788;
+    --blue: #1a5276; --blue-light: #d6eaf8; --red: #922b21;
+    --font-main: 'Sora', sans-serif; --font-mono: 'DM Mono', monospace;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: var(--font-main); background: var(--bg); color: var(--text); min-height: 100vh; }
 
-  /* HEADER */
   .header {
     background: var(--surface); border-bottom: 1px solid var(--border);
-    padding: 0.55rem 0.75rem;
-    display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 50; gap: 8px;
+    padding: 0.55rem 0.75rem; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 50; gap: 8px;
   }
   .header-left { display: flex; align-items: center; gap: 8px; }
-  .logo {
-    width: 28px; height: 28px; background: var(--text);
-    border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  }
+  .logo { width: 28px; height: 28px; background: var(--text); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .logo svg { width: 15px; height: 15px; }
   .header-title { font-size: 12.5px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
   .header-sub { font-size: 9.5px; color: var(--text2); font-family: var(--font-mono); }
-
   .admin-zone { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-  .admin-indicator {
-    display: none; align-items: center; gap: 4px;
-    font-size: 9.5px; font-family: var(--font-mono);
-    color: var(--green); background: var(--green-light);
-    padding: 3px 7px; border-radius: 20px;
-  }
+  .admin-indicator { display: none; align-items: center; gap: 4px; font-size: 9.5px; font-family: var(--font-mono); color: var(--green); background: var(--green-light); padding: 3px 7px; border-radius: 20px; }
   .admin-indicator.visible { display: flex; }
   .admin-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
-
-  .btn {
-    font-family: var(--font-main); font-size: 11px; padding: 5px 9px;
-    border-radius: 6px; border: 1px solid var(--border);
-    background: var(--surface); color: var(--text2); cursor: pointer; white-space: nowrap;
-  }
+  .btn { font-family: var(--font-main); font-size: 11px; padding: 5px 9px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); cursor: pointer; white-space: nowrap; }
   .btn:active { background: var(--surface2); }
   .btn.danger { border-color: #f5c6c3; color: var(--red); background: #fdf3f2; }
 
-  /* STATS */
-  .stats-bar {
-    background: var(--surface); border-bottom: 1px solid var(--border);
-    padding: 0.35rem 0.75rem; display: flex; gap: 0.9rem;
-    overflow-x: auto; scrollbar-width: none;
-  }
+  .stats-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.35rem 0.75rem; display: flex; gap: 0.9rem; overflow-x: auto; scrollbar-width: none; }
   .stats-bar::-webkit-scrollbar { display: none; }
   .stat { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
   .stat-label { font-size: 9.5px; color: var(--text2); font-family: var(--font-mono); }
   .stat-val { font-size: 11.5px; font-weight: 600; color: var(--text); }
   .stat-sep { width: 1px; height: 14px; background: var(--border); }
 
-  /* SYNC STATUS */
-  .sync-bar {
-    background: var(--surface); border-bottom: 1px solid var(--border);
-    padding: 0.3rem 0.75rem;
-    display: flex; align-items: center; gap: 6px;
-    font-size: 10px; font-family: var(--font-mono); color: var(--text2);
-  }
-  .sync-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--text3); flex-shrink: 0;
-    transition: background 0.3s;
-  }
+  .sync-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.28rem 0.75rem; display: flex; align-items: center; gap: 6px; font-size: 10px; font-family: var(--font-mono); color: var(--text2); }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; transition: background 0.3s; }
   .sync-dot.syncing { background: #e6a817; animation: pulse 0.8s ease-in-out infinite; }
   .sync-dot.ok      { background: var(--green); }
   .sync-dot.error   { background: var(--red); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-  /* MAIN */
   .main { padding: 0.4rem; }
-
-  .notice {
-    background: var(--blue-light); border: 1px solid #a9cce3;
-    border-radius: 7px; padding: 6px 9px; font-size: 10.5px; color: var(--blue);
-    margin-bottom: 0.4rem; display: flex; align-items: flex-start; gap: 5px; line-height: 1.4;
-  }
+  .notice { background: var(--blue-light); border: 1px solid #a9cce3; border-radius: 7px; padding: 6px 9px; font-size: 10.5px; color: var(--blue); margin-bottom: 0.4rem; display: flex; align-items: flex-start; gap: 5px; line-height: 1.4; }
   .notice svg { flex-shrink: 0; margin-top: 1px; }
 
-  /* TABLE */
-  .table-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 9px; overflow: hidden;
-  }
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
   table { width: 100%; border-collapse: collapse; table-layout: fixed; }
   col.col-apt   { width: 32px; }
   col.col-month { width: calc((100% - 32px) / 8); }
 
-  thead th {
-    background: var(--surface2); font-family: var(--font-mono);
-    font-size: 7px; font-weight: 500; color: var(--text2);
-    padding: 4px 1px; text-align: center;
-    border-bottom: 1px solid var(--border);
-    letter-spacing: 0.01em; line-height: 1.25;
-  }
+  thead th { background: var(--surface2); font-family: var(--font-mono); font-size: 7px; font-weight: 500; color: var(--text2); padding: 4px 1px; text-align: center; border-bottom: 1px solid var(--border); letter-spacing: 0.01em; line-height: 1.25; }
   thead th:first-child { font-size: 7.5px; }
-
   tbody tr:not(:last-child) td { border-bottom: 1px solid #ece9e3; }
   tbody tr:nth-child(even) { background: #faf9f7; }
   tbody tr:nth-child(even) td:first-child { background: #faf9f7; }
-
   tbody td { padding: 2.5px 1px; text-align: center; vertical-align: middle; overflow: hidden; }
-  tbody td:first-child {
-    font-family: var(--font-mono); font-size: 8px; font-weight: 500; color: var(--text);
-    border-right: 1px solid var(--border); padding: 2.5px 1px;
-    line-height: 1; background: var(--surface);
-  }
+  tbody td:first-child { font-family: var(--font-mono); font-size: 8px; font-weight: 500; color: var(--text); border-right: 1px solid var(--border); padding: 2.5px 1px; line-height: 1; background: var(--surface); }
 
-  /* CELL BUTTON */
-  .cell-btn {
-    width: 21px; height: 21px; border-radius: 5px;
-    border: 1.5px solid var(--border); background: transparent;
-    cursor: default; display: inline-flex; align-items: center; justify-content: center;
-    transition: background 0.1s, border-color 0.1s;
-    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
-  }
+  .cell-btn { width: 21px; height: 21px; border-radius: 5px; border: 1.5px solid var(--border); background: transparent; cursor: default; display: inline-flex; align-items: center; justify-content: center; transition: background 0.1s, border-color 0.1s; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
   .cell-btn.admin { cursor: pointer; }
   .cell-btn.admin:active { border-color: var(--green-mid); background: var(--green-light); transform: scale(0.92); }
   .cell-btn.paid { background: var(--green); border-color: var(--green); }
-  .cell-btn.saving { opacity: 0.6; pointer-events: none; }
   .cell-btn svg { display: none; }
   .cell-btn.paid svg { display: block; }
 
-  /* SUMMARY ROW */
-  .summary-row td {
-    background: var(--surface2) !important; font-family: var(--font-mono);
-    font-size: 7.5px; color: var(--text2);
-    padding: 3.5px 1px; border-top: 1px solid var(--border); font-weight: 500;
-  }
+  .summary-row td { background: var(--surface2) !important; font-family: var(--font-mono); font-size: 7.5px; color: var(--text2); padding: 3.5px 1px; border-top: 1px solid var(--border); font-weight: 500; }
 
-  /* LEGEND */
-  .legend {
-    display: flex; align-items: center; gap: 10px;
-    padding: 6px 10px; border-top: 1px solid var(--border); background: var(--surface2);
-  }
+  .legend { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-top: 1px solid var(--border); background: var(--surface2); }
   .legend-item { display: flex; align-items: center; gap: 4px; font-size: 9.5px; color: var(--text2); }
   .ldot { width: 8px; height: 8px; border-radius: 2px; }
   .last-upd { margin-left: auto; font-size: 8.5px; color: var(--text3); font-family: var(--font-mono); }
 
-  /* LOADING OVERLAY */
-  .loading-overlay {
-    position: fixed; inset: 0; background: var(--bg);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 300; gap: 12px;
-  }
-  .loading-overlay.hidden { display: none; }
-  .loading-spinner {
-    width: 28px; height: 28px; border: 2px solid var(--border);
-    border-top-color: var(--green); border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
+  /* LOADING — affiche l'app en dessous, juste un bandeau */
+  .loading-bar { background: var(--green-light); border-bottom: 1px solid #b7e4c7; padding: 6px 12px; display: flex; align-items: center; gap: 8px; font-size: 10.5px; font-family: var(--font-mono); color: var(--green); }
+  .loading-bar.hidden { display: none; }
+  .mini-spin { width: 12px; height: 12px; border: 1.5px solid #b7e4c7; border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { font-size: 12px; color: var(--text2); font-family: var(--font-mono); }
 
-  /* MODAL */
-  .modal-wrap {
-    display: none; position: fixed; inset: 0;
-    background: rgba(26,25,22,0.5); backdrop-filter: blur(3px);
-    z-index: 200; align-items: center; justify-content: center; padding: 1rem;
-  }
+  .modal-wrap { display: none; position: fixed; inset: 0; background: rgba(26,25,22,0.5); backdrop-filter: blur(3px); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
   .modal-wrap.open { display: flex; }
-  .modal {
-    background: var(--surface); border-radius: 14px; border: 1px solid var(--border);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    padding: 1.5rem; width: 100%; max-width: 320px;
-    animation: modalIn 0.2s ease;
-  }
-  @keyframes modalIn {
-    from { transform: translateY(10px) scale(0.98); opacity: 0; }
-    to   { transform: translateY(0) scale(1); opacity: 1; }
-  }
-  .modal-icon {
-    width: 40px; height: 40px; background: var(--surface2);
-    border-radius: 10px; display: flex; align-items: center; justify-content: center;
-    margin-bottom: 0.75rem;
-  }
+  .modal { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.2); padding: 1.5rem; width: 100%; max-width: 320px; animation: modalIn 0.2s ease; }
+  @keyframes modalIn { from{transform:translateY(10px) scale(0.98);opacity:0} to{transform:translateY(0) scale(1);opacity:1} }
+  .modal-icon { width: 40px; height: 40px; background: var(--surface2); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; }
   .modal h2 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
   .modal p  { font-size: 12px; color: var(--text2); margin-bottom: 1rem; line-height: 1.5; }
-  .modal input {
-    width: 100%; font-family: var(--font-mono); font-size: 14px;
-    padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--border);
-    background: var(--surface2); color: var(--text); outline: none; margin-bottom: 6px;
-  }
+  .modal input { width: 100%; font-family: var(--font-mono); font-size: 14px; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface2); color: var(--text); outline: none; margin-bottom: 6px; }
   .modal input:focus { border-color: #999; }
   .modal input.error { border-color: #e74c3c; background: #fdf3f2; }
   .error-msg { font-size: 11px; color: var(--red); margin-bottom: 8px; display: none; }
   .modal-btns { display: flex; gap: 8px; margin-top: 4px; }
-  .modal-btns button {
-    flex: 1; padding: 10px; border-radius: 8px;
-    font-family: var(--font-main); font-size: 13px; font-weight: 500; cursor: pointer;
-  }
+  .modal-btns button { flex: 1; padding: 10px; border-radius: 8px; font-family: var(--font-main); font-size: 13px; font-weight: 500; cursor: pointer; }
   .btn-cancel-modal { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
   .btn-confirm-modal { background: var(--text); border: 1px solid var(--text); color: #fff; }
 </style>
 </head>
 <body>
-
-<!-- LOADING -->
-<div class="loading-overlay" id="loading">
-  <div class="loading-spinner"></div>
-  <div class="loading-text">Chargement des données...</div>
-</div>
 
 <header class="header">
   <div class="header-left">
@@ -234,9 +115,7 @@
     </div>
   </div>
   <div class="admin-zone">
-    <div class="admin-indicator" id="admin-indicator">
-      <div class="admin-dot"></div>Admin
-    </div>
+    <div class="admin-indicator" id="admin-indicator"><div class="admin-dot"></div>Admin</div>
     <button class="btn" id="admin-btn" onclick="handleAdminBtn()">Connexion admin</button>
   </div>
 </header>
@@ -251,6 +130,12 @@
   <div class="stat"><span class="stat-label">Ce mois</span><span class="stat-val" id="s-month">—</span></div>
 </div>
 
+<!-- Bandeau de chargement (non bloquant) -->
+<div class="loading-bar" id="loading-bar">
+  <div class="mini-spin"></div>
+  Synchronisation en cours...
+</div>
+
 <div class="sync-bar">
   <div class="sync-dot" id="sync-dot"></div>
   <span id="sync-label">Connexion...</span>
@@ -261,7 +146,6 @@
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#1a5276" stroke-width="1.2"/><path d="M8 7v4M8 5h.01" stroke="#1a5276" stroke-width="1.4" stroke-linecap="round"/></svg>
     Consultation libre — seul l'admin peut cocher les paiements.
   </div>
-
   <div class="table-card">
     <table id="main-table">
       <colgroup>
@@ -297,76 +181,28 @@
 </div>
 
 <script>
-// ── CONFIG ───────────────────────────────────────────────────
-const ADMIN_PWD  = "menage2026";      // ← CHANGEZ CE MOT DE PASSE
+const ADMIN_PWD  = "menage2026";
 const BIN_ID     = "69f3de36aaba882197594807";
 const MASTER_KEY = "$2a$10$H2OJo1HHGFHY3fXn2NZMIuztank.ILbzBlwvpGbh9kmKmE0EKckQi";
 const API_URL    = "https://api.jsonbin.io/v3/b/" + BIN_ID;
+const LS_KEY     = "menage_imm19_cache";
+const TIMEOUT_MS = 4000; // 4 secondes max avant fallback local
 
 const MONTHS_HDR  = ["MAI","JUIN","JUIL","AOÛ","SEP","OCT","NOV","DÉC"];
 const MONTHS_FULL = ["Mai 26","Juin 26","Juil 26","Août 26","Sept 26","Oct 26","Nov 26","Déc 26"];
 const MONTH_KEYS  = ["mai","juin","juil","aout","sept","oct","nov","dec"];
 const APTS = Array.from({length:17}, (_,i) => "Apt "+(i+1));
 
-let isAdmin = false;
-let paid    = {};
+let isAdmin  = false;
+let paid     = {};
 let isSaving = false;
 
-// ── SYNC STATUS ──────────────────────────────────────────────
+// ── HELPERS ──────────────────────────────────────────────────
+function cellKey(apt, mKey) { return apt.replace(' ','_') + '__' + mKey; }
+
 function setSyncStatus(state, label) {
-  const dot = document.getElementById('sync-dot');
-  const lbl = document.getElementById('sync-label');
-  dot.className = 'sync-dot ' + state;
-  lbl.textContent = label;
-}
-
-// ── JSONBIN API ──────────────────────────────────────────────
-async function loadFromCloud() {
-  setSyncStatus('syncing', 'Chargement...');
-  try {
-    const res = await fetch(API_URL + '/latest', {
-      headers: { 'X-Master-Key': MASTER_KEY }
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    paid = data.record.paid || {};
-    setSyncStatus('ok', 'Synchronisé');
-    showLastUpdate(data.record.updated);
-  } catch(e) {
-    setSyncStatus('error', 'Erreur de connexion — données locales');
-    // Fallback to localStorage
-    try {
-      const raw = localStorage.getItem('menage_imm19_fallback');
-      if (raw) paid = JSON.parse(raw).paid || {};
-    } catch(e2) {}
-  }
-  document.getElementById('loading').classList.add('hidden');
-  buildTable();
-}
-
-async function saveToCloud() {
-  if (isSaving) return;
-  isSaving = true;
-  setSyncStatus('syncing', 'Sauvegarde...');
-  // Optimistic local backup
-  try { localStorage.setItem('menage_imm19_fallback', JSON.stringify({paid})); } catch(e) {}
-  try {
-    const now = new Date().toISOString();
-    const res = await fetch(API_URL, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': MASTER_KEY
-      },
-      body: JSON.stringify({ paid, updated: now })
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    setSyncStatus('ok', 'Sauvegardé');
-    showLastUpdate(now);
-  } catch(e) {
-    setSyncStatus('error', 'Erreur — réessayez');
-  }
-  isSaving = false;
+  document.getElementById('sync-dot').className = 'sync-dot ' + state;
+  document.getElementById('sync-label').textContent = label;
 }
 
 function showLastUpdate(iso) {
@@ -375,13 +211,94 @@ function showLastUpdate(iso) {
     const d = new Date(iso);
     document.getElementById('last-update').textContent =
       d.toLocaleDateString('fr-FR') + ' ' +
-      d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+      d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
   } catch(e) {}
 }
 
-// ── TABLE ────────────────────────────────────────────────────
-function cellKey(apt, mKey) { return apt.replace(' ','_') + '__' + mKey; }
+// Fetch with timeout
+function fetchWithTimeout(url, options, ms) {
+  return Promise.race([
+    fetch(url, options),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))
+  ]);
+}
 
+// ── CACHE LOCAL ───────────────────────────────────────────────
+function saveLocal(data) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e) {}
+}
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+// ── CLOUD ─────────────────────────────────────────────────────
+async function loadFromCloud() {
+  // 1. Affiche immédiatement le cache local si dispo (0ms de délai)
+  const cache = loadLocal();
+  if (cache) {
+    paid = cache.paid || {};
+    buildTable();
+    showLastUpdate(cache.updated);
+    setSyncStatus('syncing', 'Mise à jour...');
+  } else {
+    setSyncStatus('syncing', 'Chargement...');
+    buildTable(); // table vide mais visible
+  }
+
+  // 2. Essaie de charger depuis le cloud avec timeout
+  try {
+    const res = await fetchWithTimeout(
+      API_URL + '/latest',
+      { headers: { 'X-Master-Key': MASTER_KEY } },
+      TIMEOUT_MS
+    );
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    paid = data.record.paid || {};
+    saveLocal({ paid, updated: data.record.updated });
+    buildTable();
+    showLastUpdate(data.record.updated);
+    setSyncStatus('ok', 'Synchronisé');
+  } catch(e) {
+    if (cache) {
+      setSyncStatus('error', 'Hors ligne — données locales affichées');
+    } else {
+      setSyncStatus('error', 'Erreur de connexion');
+    }
+  }
+
+  document.getElementById('loading-bar').classList.add('hidden');
+}
+
+async function saveToCloud() {
+  if (isSaving) return;
+  isSaving = true;
+  setSyncStatus('syncing', 'Sauvegarde...');
+  const now = new Date().toISOString();
+  saveLocal({ paid, updated: now }); // sauvegarde locale immédiate
+  try {
+    const res = await fetchWithTimeout(
+      API_URL,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+        body: JSON.stringify({ paid, updated: now })
+      },
+      TIMEOUT_MS
+    );
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    setSyncStatus('ok', 'Sauvegardé');
+    showLastUpdate(now);
+  } catch(e) {
+    setSyncStatus('error', 'Sauvegardé localement — sync en attente');
+  }
+  isSaving = false;
+}
+
+// ── TABLE ─────────────────────────────────────────────────────
 function buildTable() {
   const theadRow = document.getElementById('thead-row');
   theadRow.innerHTML = '<th>APT</th>';
@@ -405,8 +322,8 @@ function buildTable() {
       const btn = document.createElement('button');
       const k   = cellKey(apt, mKey);
       const isPaid = !!paid[k];
-      btn.className = 'cell-btn' + (isPaid ? ' paid' : '') + (isAdmin ? ' admin' : '');
-      btn.setAttribute('aria-label', apt + ' ' + MONTHS_FULL[mIdx] + (isPaid ? ' payé' : ' non payé'));
+      btn.className = 'cell-btn' + (isPaid?' paid':'') + (isAdmin?' admin':'');
+      btn.setAttribute('aria-label', apt + ' ' + MONTHS_FULL[mIdx] + (isPaid?' payé':' non payé'));
       btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 13 13" fill="none"><polyline points="1.5,6.5 5,10 11.5,3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       btn.onclick = async () => {
         if (!isAdmin || isSaving) return;
@@ -422,7 +339,6 @@ function buildTable() {
     tbody.appendChild(tr);
   });
 
-  // Summary row
   const sumRow = document.createElement('tr');
   sumRow.className = 'summary-row';
   const lbl = document.createElement('td');
@@ -430,37 +346,35 @@ function buildTable() {
   sumRow.appendChild(lbl);
   MONTH_KEYS.forEach(mKey => {
     const td = document.createElement('td');
-    td.textContent = APTS.filter(a => !!paid[cellKey(a, mKey)]).length + '/' + APTS.length;
+    td.textContent = APTS.filter(a => !!paid[cellKey(a,mKey)]).length + '/' + APTS.length;
     sumRow.appendChild(td);
   });
   tbody.appendChild(sumRow);
-
   updateStats();
 }
 
 function updateSummaryRow() {
   const cells = document.querySelectorAll('#tbody tr.summary-row td');
-  MONTH_KEYS.forEach((mKey, idx) => {
-    cells[idx+1].textContent = APTS.filter(a => !!paid[cellKey(a, mKey)]).length + '/' + APTS.length;
+  MONTH_KEYS.forEach((mKey,idx) => {
+    cells[idx+1].textContent = APTS.filter(a => !!paid[cellKey(a,mKey)]).length + '/' + APTS.length;
   });
 }
 
 function updateStats() {
-  const total     = APTS.length * MONTH_KEYS.length;
+  const total = APTS.length * MONTH_KEYS.length;
   const paidCount = Object.values(paid).filter(Boolean).length;
   document.getElementById('s-paid').textContent    = paidCount;
   document.getElementById('s-pending').textContent = total - paidCount;
-  document.getElementById('s-rate').textContent    = Math.round(paidCount / total * 100) + '%';
+  document.getElementById('s-rate').textContent    = Math.round(paidCount/total*100) + '%';
   const mIdx = new Date().getMonth() - 4;
   if (mIdx >= 0 && mIdx < MONTH_KEYS.length) {
-    const c = APTS.filter(a => !!paid[cellKey(a, MONTH_KEYS[mIdx])]).length;
+    const c = APTS.filter(a => !!paid[cellKey(a,MONTH_KEYS[mIdx])]).length;
     document.getElementById('s-month').textContent = c + '/' + APTS.length;
   }
 }
 
-// ── ADMIN ────────────────────────────────────────────────────
+// ── ADMIN ─────────────────────────────────────────────────────
 function handleAdminBtn() { isAdmin ? logout() : openModal(); }
-
 function openModal() {
   document.getElementById('modal').classList.add('open');
   document.getElementById('pwd-input').value = '';
@@ -469,11 +383,9 @@ function openModal() {
   setTimeout(() => document.getElementById('pwd-input').focus(), 100);
 }
 function closeModal() { document.getElementById('modal').classList.remove('open'); }
-
 function confirmLogin() {
   if (document.getElementById('pwd-input').value === ADMIN_PWD) {
-    isAdmin = true;
-    closeModal();
+    isAdmin = true; closeModal();
     document.getElementById('admin-btn').textContent = 'Déconnexion';
     document.getElementById('admin-btn').classList.add('danger');
     document.getElementById('admin-indicator').classList.add('visible');
@@ -485,7 +397,6 @@ function confirmLogin() {
     document.getElementById('pwd-input').focus();
   }
 }
-
 function logout() {
   isAdmin = false;
   document.getElementById('admin-btn').textContent = 'Connexion admin';
@@ -493,32 +404,24 @@ function logout() {
   document.getElementById('admin-indicator').classList.remove('visible');
   buildTable();
 }
+document.getElementById('modal').addEventListener('click', function(e) { if(e.target===this) closeModal(); });
 
-document.getElementById('modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
-
-// ── AUTO-REFRESH toutes les 60s pour les habitants ───────────
+// Auto-refresh toutes les 90s pour les habitants
 setInterval(async () => {
-  if (!isAdmin) {
-    setSyncStatus('syncing', 'Actualisation...');
-    try {
-      const res = await fetch(API_URL + '/latest', {
-        headers: { 'X-Master-Key': MASTER_KEY }
-      });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      paid = data.record.paid || {};
-      setSyncStatus('ok', 'Synchronisé');
-      showLastUpdate(data.record.updated);
-      buildTable();
-    } catch(e) {
-      setSyncStatus('error', 'Hors ligne');
-    }
-  }
-}, 60000);
+  if (isAdmin) return;
+  try {
+    const res = await fetchWithTimeout(API_URL+'/latest', {headers:{'X-Master-Key':MASTER_KEY}}, TIMEOUT_MS);
+    if (!res.ok) return;
+    const data = await res.json();
+    paid = data.record.paid || {};
+    saveLocal({paid, updated: data.record.updated});
+    buildTable();
+    showLastUpdate(data.record.updated);
+    setSyncStatus('ok', 'Synchronisé');
+  } catch(e) {}
+}, 90000);
 
-// ── INIT ─────────────────────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────
 loadFromCloud();
 </script>
 </body>
