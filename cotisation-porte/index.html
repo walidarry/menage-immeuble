@@ -167,16 +167,48 @@ function todayStr(){
 }
 function fmt(n){ return (n||0).toLocaleString('fr-FR')+' Dhs'; }
 
-async function loadData(){
+const STORAGE_KEY = 'cotisation-imm19-data';
+let BUCKET = null;
+
+async function ensureBucket(){
+  const params = new URLSearchParams(location.search);
+  if(params.has('b')){
+    BUCKET = params.get('b');
+    return true;
+  }
+  // Premiere ouverture : on cree un espace de stockage dedie et on l'ajoute au lien.
   try{
-    const res = await window.storage.get('cotisation-imm19-data', true);
-    data = res && res.value ? JSON.parse(res.value) : {};
+    document.body.innerHTML = '<div style="padding:60px 24px;text-align:center;font-family:sans-serif;color:#555">Configuration initiale du lien partage...<br>Une seconde.</div>';
+    const res = await fetch('https://kvdb.io/', { method:'POST' });
+    const id = (await res.text()).trim();
+    const url = new URL(location.href);
+    url.searchParams.set('b', id);
+    location.replace(url.toString());
+    return false; // la page va se recharger avec le bon lien
+  }catch(e){
+    document.body.innerHTML = '<div style="padding:60px 24px;text-align:center;font-family:sans-serif;color:#a33">Impossible de se connecter au stockage en ligne. Verifie ta connexion internet et recharge la page.</div>';
+    return false;
+  }
+}
+
+async function loadData(){
+  const ready = await ensureBucket();
+  if(!ready) return;
+  try{
+    const res = await fetch('https://kvdb.io/'+BUCKET+'/'+STORAGE_KEY);
+    if(res.status === 404){ data = {}; }
+    else { const txt = await res.text(); data = txt ? JSON.parse(txt) : {}; }
   }catch(e){ data = {}; }
   buildTable();
 }
 async function saveData(){
-  try{ await window.storage.set('cotisation-imm19-data', JSON.stringify(data), true); }
-  catch(e){ console.error('Erreur de sauvegarde', e); }
+  if(!BUCKET) return;
+  try{
+    await fetch('https://kvdb.io/'+BUCKET+'/'+STORAGE_KEY, { method:'PUT', body: JSON.stringify(data) });
+  }catch(e){
+    console.error('Erreur de sauvegarde', e);
+    alert('Erreur de sauvegarde — verifie ta connexion internet et reessaie.');
+  }
 }
 
 function buildTable(){
