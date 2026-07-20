@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Cotisation Porte — Immeuble 19</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
   :root{
     --bg:#FAF8F3; --surface:#FFFFFF; --surface2:#F1EEE5; --border:#E5E0D3;
@@ -167,44 +169,31 @@ function todayStr(){
 }
 function fmt(n){ return (n||0).toLocaleString('fr-FR')+' Dhs'; }
 
-const STORAGE_KEY = 'cotisation-imm19-data';
-let BUCKET = null;
-
-async function ensureBucket(){
-  const params = new URLSearchParams(location.search);
-  if(params.has('b')){
-    BUCKET = params.get('b');
-    return true;
-  }
-  // Premiere ouverture : on cree un espace de stockage dedie et on l'ajoute au lien.
-  try{
-    document.body.innerHTML = '<div style="padding:60px 24px;text-align:center;font-family:sans-serif;color:#555">Configuration initiale du lien partage...<br>Une seconde.</div>';
-    const res = await fetch('https://kvdb.io/', { method:'POST' });
-    const id = (await res.text()).trim();
-    const url = new URL(location.href);
-    url.searchParams.set('b', id);
-    location.replace(url.toString());
-    return false; // la page va se recharger avec le bon lien
-  }catch(e){
-    document.body.innerHTML = '<div style="padding:60px 24px;text-align:center;font-family:sans-serif;color:#a33">Impossible de se connecter au stockage en ligne. Verifie ta connexion internet et recharge la page.</div>';
-    return false;
-  }
-}
+const firebaseConfig = {
+  apiKey: "AIzaSyAJTdJI3h3oCFC4pPEjA4tsFNHvxogUr4A",
+  authDomain: "imm-19.firebaseapp.com",
+  projectId: "imm-19",
+  storageBucket: "imm-19.firebasestorage.app",
+  messagingSenderId: "816526963037",
+  appId: "1:816526963037:web:9372f0e217fba6aad9b8b4"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const docRef = db.collection('cotisation_imm19').doc('data');
 
 async function loadData(){
-  const ready = await ensureBucket();
-  if(!ready) return;
   try{
-    const res = await fetch('https://kvdb.io/'+BUCKET+'/'+STORAGE_KEY);
-    if(res.status === 404){ data = {}; }
-    else { const txt = await res.text(); data = txt ? JSON.parse(txt) : {}; }
-  }catch(e){ data = {}; }
+    const snap = await docRef.get();
+    data = snap.exists ? snap.data() : {};
+  }catch(e){
+    console.error('Erreur de chargement', e);
+    document.getElementById('notice').textContent = 'Erreur de connexion au serveur. Verifie ta connexion internet et recharge la page.';
+  }
   buildTable();
 }
 async function saveData(){
-  if(!BUCKET) return;
   try{
-    await fetch('https://kvdb.io/'+BUCKET+'/'+STORAGE_KEY, { method:'PUT', body: JSON.stringify(data) });
+    await docRef.set(data);
   }catch(e){
     console.error('Erreur de sauvegarde', e);
     alert('Erreur de sauvegarde — verifie ta connexion internet et reessaie.');
