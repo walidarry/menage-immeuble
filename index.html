@@ -34,14 +34,11 @@
   .btn:active { background: var(--surface2); }
   .btn.danger { border-color: #f5c6c3; color: var(--red); background: #fdf3f2; }
 
-  .stats-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.35rem 0.75rem; display: flex; gap: 0.9rem; overflow-x: auto; scrollbar-width: none; }
-  .stats-bar::-webkit-scrollbar { display: none; }
-  .stat { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-  .stat-label { font-size: 9.5px; color: var(--text2); font-family: var(--font-mono); }
-  .stat-val { font-size: 11.5px; font-weight: 600; color: var(--text); }
-  .stat-sep { width: 1px; height: 14px; background: var(--border); }
+  .fee-banner { background: var(--green); color: #fff; padding: 0.7rem 0.75rem; display: flex; align-items: baseline; justify-content: center; gap: 8px; }
+  .fee-label { font-size: 13px; font-weight: 400; opacity: 0.85; }
+  .fee-amount { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
 
-  .sync-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.28rem 0.75rem; display: flex; align-items: center; gap: 6px; font-size: 10px; font-family: var(--font-mono); color: var(--text2); }
+  .title-row { display: flex; align-items: center; gap: 5px; }
   .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; transition: background 0.3s; }
   .sync-dot.syncing { background: #e6a817; animation: pulse 0.8s ease-in-out infinite; }
   .sync-dot.ok      { background: var(--green); }
@@ -110,7 +107,7 @@
       <svg viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="7" height="7" rx="1.5" fill="white" opacity="0.9"/><rect x="11" y="2" width="7" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="2" y="11" width="7" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="11" y="11" width="7" height="7" rx="1.5" fill="white" opacity="0.9"/></svg>
     </div>
     <div>
-      <div class="header-title">Immeuble 19 — Ménage</div>
+      <div class="title-row"><div class="header-title">Immeuble 19 — Ménage</div><div class="sync-dot" id="sync-dot"></div></div>
       <div class="header-sub">Suivi paiements 2026</div>
     </div>
   </div>
@@ -120,25 +117,9 @@
   </div>
 </header>
 
-<div class="stats-bar">
-  <div class="stat"><span class="stat-label">Payés</span><span class="stat-val" id="s-paid">0</span></div>
-  <div class="stat-sep"></div>
-  <div class="stat"><span class="stat-label">En attente</span><span class="stat-val" id="s-pending">136</span></div>
-  <div class="stat-sep"></div>
-  <div class="stat"><span class="stat-label">Taux</span><span class="stat-val" id="s-rate">0%</span></div>
-  <div class="stat-sep"></div>
-  <div class="stat"><span class="stat-label">Ce mois</span><span class="stat-val" id="s-month">—</span></div>
-</div>
-
-<!-- Bandeau de chargement (non bloquant) -->
-<div class="loading-bar" id="loading-bar">
-  <div class="mini-spin"></div>
-  Synchronisation en cours...
-</div>
-
-<div class="sync-bar">
-  <div class="sync-dot" id="sync-dot"></div>
-  <span id="sync-label">Connexion...</span>
+<div class="fee-banner">
+  <span class="fee-label">Mensualité</span>
+  <span class="fee-amount">40 Dhs</span>
 </div>
 
 <main class="main">
@@ -201,8 +182,9 @@ let isSaving = false;
 function cellKey(apt, mKey) { return apt.replace(' ','_') + '__' + mKey; }
 
 function setSyncStatus(state, label) {
-  document.getElementById('sync-dot').className = 'sync-dot ' + state;
-  document.getElementById('sync-label').textContent = label;
+  const dot = document.getElementById('sync-dot');
+  dot.className = 'sync-dot ' + state;
+  dot.title = label;
 }
 
 function showLastUpdate(iso) {
@@ -270,7 +252,6 @@ async function loadFromCloud() {
     }
   }
 
-  document.getElementById('loading-bar').classList.add('hidden');
 }
 
 async function saveToCloud() {
@@ -360,18 +341,7 @@ function updateSummaryRow() {
   });
 }
 
-function updateStats() {
-  const total = APTS.length * MONTH_KEYS.length;
-  const paidCount = Object.values(paid).filter(Boolean).length;
-  document.getElementById('s-paid').textContent    = paidCount;
-  document.getElementById('s-pending').textContent = total - paidCount;
-  document.getElementById('s-rate').textContent    = Math.round(paidCount/total*100) + '%';
-  const mIdx = new Date().getMonth() - 4;
-  if (mIdx >= 0 && mIdx < MONTH_KEYS.length) {
-    const c = APTS.filter(a => !!paid[cellKey(a,MONTH_KEYS[mIdx])]).length;
-    document.getElementById('s-month').textContent = c + '/' + APTS.length;
-  }
-}
+function updateStats() {} // barre de stats retirée
 
 // ── ADMIN ─────────────────────────────────────────────────────
 function handleAdminBtn() { isAdmin ? logout() : openModal(); }
