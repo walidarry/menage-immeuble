@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Caisse — Immeuble 19</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f3ee; --surface: #ffffff; --surface2: #f0ede6;
+    --border: #ddd9d0; --text: #1a1916; --text2: #6b6760; --text3: #a8a49e;
+    --green: #2d6a4f; --green-light: #d8f3dc;
+    --red: #922b21; --red-light: #fdecea;
+    --amber: #9a6700; --amber-light: #fff4d6;
+    --blue: #1a5276; --blue-light: #d6eaf8;
+    --font-main: 'Sora', system-ui, sans-serif; --font-mono: 'DM Mono', ui-monospace, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-main); background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 40px; }
+  .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.6rem 0.75rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; gap: 8px; }
+  .header-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .logo { width: 28px; height: 28px; background: var(--text); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 11px; font-weight: 700; font-family: var(--font-mono); }
+  .title-row { display: flex; align-items: center; gap: 5px; }
+  .header-title { font-size: 13px; font-weight: 600; letter-spacing: -0.02em; }
+  .header-sub { font-size: 9.5px; color: var(--text2); font-family: var(--font-mono); }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+  .sync-dot.syncing { background: #e6a817; animation: pulse 0.8s ease-in-out infinite; }
+  .sync-dot.ok { background: var(--green); }
+  .sync-dot.error { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .btn { font-family: var(--font-main); font-size: 11px; padding: 6px 10px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); cursor: pointer; white-space: nowrap; }
+  .btn.danger { border-color: #f5c6c3; color: var(--red); background: #fdf3f2; }
+  .btn.primary { background: var(--green); border-color: var(--green); color: #fff; font-weight: 600; }
+  .btn.dark { background: var(--text); border-color: var(--text); color: #fff; font-weight: 600; }
+
+  .main { padding: 0.6rem; display: flex; flex-direction: column; gap: 0.6rem; max-width: 760px; margin: 0 auto; }
+
+  /* CAISSE */
+  .caisse { background: var(--green); color: #fff; border-radius: 12px; padding: 1rem; }
+  .caisse-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .caisse-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.85; }
+  .caisse-amount { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; }
+  .caisse-rule { font-size: 10.5px; opacity: 0.8; margin-top: 2px; }
+  .calc { margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.25); padding-top: 0.6rem; display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+  .calc-row { display: flex; justify-content: space-between; gap: 8px; }
+  .calc-row.minus { opacity: 0.9; }
+  .calc-row.total { border-top: 1px solid rgba(255,255,255,0.25); padding-top: 5px; margin-top: 2px; font-weight: 600; }
+
+  .actions { display: none; gap: 6px; }
+  .actions.visible { display: flex; }
+  .actions .btn { flex: 1; padding: 10px; font-size: 12.5px; }
+  .pdf-btn { width: 100%; padding: 11px; font-size: 13px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .card-head { padding: 0.6rem 0.75rem; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .card-title { font-size: 12.5px; font-weight: 600; }
+  .card-meta { font-size: 10px; color: var(--text2); font-family: var(--font-mono); text-align: right; }
+  .empty { padding: 1rem 0.75rem; font-size: 12px; color: var(--text2); text-align: center; }
+
+  /* GRILLE MOIS x APPARTEMENTS */
+  .grid-wrap { overflow-x: auto; }
+  table.grid { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; min-width: 700px; }
+  table.grid col.c-mois { width: 52px; }
+  table.grid col.c-tot  { width: 52px; }
+  table.grid th, table.grid td { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: center; padding: 8px 0; font-size: 10.5px; border-bottom: 1px solid #ece9e3; white-space: nowrap; overflow: hidden; }
+  table.grid thead th { background: var(--surface); color: var(--text2); font-weight: 500; font-size: 10px; border-bottom: 1px solid var(--border); }
+  table.grid th.mois { position: sticky; left: 0; z-index: 2; text-align: left; padding-left: 7px; font-size: 10.5px; font-weight: 600; color: var(--text); background: var(--surface); border-right: 1px solid var(--border); }
+  .scroll-hint { font-size: 10px; color: var(--text3); padding: 5px 10px 0; }
+  @media (min-width: 740px) { .scroll-hint { display: none; } }
+  table.grid td.tot, table.grid th.tot { border-left: 1px solid var(--border); font-weight: 600; color: var(--text); background: var(--surface); }
+  table.grid td.cell { cursor: default; }
+  .admin table.grid td.cell { cursor: pointer; }
+  table.grid td.full { background: #e9f6ec; color: var(--green); font-weight: 600; }
+  table.grid td.part { color: var(--text); font-weight: 600; }
+  table.grid td.zero { color: var(--text3); }
+  table.grid tr.sum th, table.grid tr.sum td { background: var(--surface); font-weight: 700; color: var(--text); border-top: 1.5px solid var(--text3); border-bottom: none; }
+
+  /* Saisie dépense en ligne */
+  .dep-form { display: none; padding: 0.7rem 0.75rem; border-bottom: 1px solid var(--border); flex-direction: column; gap: 6px; }
+  .admin .dep-form { display: flex; }
+  .dep-form input { font-family: var(--font-main); font-size: 15px; padding: 9px 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); outline: none; width: 100%; min-width: 0; }
+  .dep-form input:focus { border-color: var(--green); }
+  .dep-form .row { display: flex; gap: 6px; }
+  .dep-form .row input[type=date] { flex: 1.3; }
+  .dep-form .row input[type=number] { flex: 1; }
+  .dep-form .row button { flex: 0 0 auto; padding: 0 14px; border-radius: 8px; border: none; background: var(--green); color: #fff; font-family: var(--font-main); font-size: 13.5px; font-weight: 600; cursor: pointer; }
+  .dep-form .hint { font-size: 10.5px; color: var(--text2); }
+  .dep-form .err { font-size: 11px; color: var(--red); display: none; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; padding: 7px 10px; font-size: 10px; color: var(--text2); border-top: 1px solid var(--border); }
+  .legend span { display: inline-flex; align-items: center; gap: 4px; }
+  .sw { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+  /* LISTES */
+  table.list { width: 100%; border-collapse: collapse; }
+  table.list th { font-family: var(--font-mono); font-size: 9.5px; font-weight: 500; color: var(--text2); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  table.list td { font-size: 12px; padding: 7px 8px; border-bottom: 1px solid #ece9e3; vertical-align: middle; }
+  table.list tr:last-child td { border-bottom: none; }
+  table.list .r { text-align: right; white-space: nowrap; }
+  .del { border: none; background: none; color: var(--text3); font-size: 15px; cursor: pointer; padding: 0 4px; display: none; }
+  .admin .del { display: inline; }
+  .cat { display: inline-block; font-size: 9.5px; font-weight: 600; padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono); }
+  .cat.menage { background: var(--blue-light); color: var(--blue); }
+  .cat.elec { background: var(--amber-light); color: var(--amber); }
+  .cat.ampoule, .cat.travaux, .cat.autre { background: var(--green-light); color: var(--green); }
+  tr.mrow { cursor: pointer; background: var(--surface); }
+  tr.mrow td { font-weight: 600; border-bottom: 1px solid var(--border); }
+  tr.mrow .arrow { display: inline-block; width: 8px; height: 8px; margin-right: 5px; vertical-align: middle; color: var(--text3); transition: transform 0.15s; }
+  tr.mrow .arrow svg { display: block; width: 8px; height: 8px; }
+  tr.mrow.open .arrow { transform: rotate(90deg); }
+  tr.drow td { font-size: 11.5px; color: var(--text2); background: #fbfaf8; }
+  tr.drow td:first-child { padding-left: 22px; }
+  .desig { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  .settings { display: none; padding: 0.6rem 0.75rem; font-size: 11.5px; color: var(--text2); gap: 8px; align-items: center; flex-wrap: wrap; border-top: 1px solid var(--border); }
+  .admin .settings { display: flex; }
+
+  /* MODALS */
+  .modal-wrap { display: none; position: fixed; inset: 0; background: rgba(26,25,22,0.5); z-index: 200; align-items: flex-end; justify-content: center; }
+  .modal-wrap.open { display: flex; }
+  .modal { background: var(--surface); border-radius: 16px 16px 0 0; padding: 1.2rem 1rem 1.5rem; width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 10px; }
+  .modal h2 { font-size: 15px; font-weight: 600; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; color: var(--text2); }
+  .field input, .field select { font-family: var(--font-main); font-size: 15px; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface2); color: var(--text); outline: none; width: 100%; }
+  .field input:focus, .field select:focus { border-color: var(--green); }
+  .error-msg { font-size: 11px; color: var(--red); display: none; }
+  .modal-btns { display: flex; gap: 8px; margin-top: 4px; }
+  .modal-btns button { flex: 1; padding: 12px; border-radius: 9px; font-family: var(--font-main); font-size: 13.5px; font-weight: 600; cursor: pointer; }
+  .b-cancel { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
+  .b-ok { background: var(--green); border: 1px solid var(--green); color: #fff; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="logo">19</div>
+    <div>
+      <div class="title-row"><div class="header-title">Caisse — Immeuble 19</div><div class="sync-dot" id="sync-dot"></div></div>
+      <div class="header-sub">Cotisation 100 Dhs / mois / appart</div>
+    </div>
+  </div>
+  <button class="btn" id="admin-btn" onclick="handleAdminBtn()">Connexion admin</button>
+</header>
+
+<main class="main" id="main">
+
+  <section class="caisse">
+    <div class="caisse-top">
+      <span class="caisse-label">Caisse</span>
+      <span class="caisse-amount num" id="c-caisse">0 Dhs</span>
+    </div>
+    <div class="caisse-rule" id="c-date">—</div>
+    <div class="calc">
+      <div class="calc-row"><span>Total encaissé</span><span class="num" id="c-enc">0 Dhs</span></div>
+      <div class="calc-row minus"><span>- Ménage</span><span class="num" id="c-menage">0 Dhs</span></div>
+      <div class="calc-row minus"><span>- Électricité</span><span class="num" id="c-elec">0 Dhs</span></div>
+      <div class="calc-row minus"><span>- Travaux</span><span class="num" id="c-travaux">0 Dhs</span></div>
+    </div>
+  </section>
+
+  <div class="actions" id="actions">
+    <button class="btn primary" onclick="openEnc()">+ Encaissement</button>
+    <button class="btn dark" onclick="openDep()">+ Dépense</button>
+  </div>
+
+  <button class="btn pdf-btn" onclick="makePdf()">Télécharger le PDF</button>
+
+  <section class="card">
+    <div class="card-head"><span class="card-title">Cotisations par mois (Dhs)</span><span class="card-meta" id="grid-meta"></span></div>
+    <div class="scroll-hint">Glisse le tableau vers la gauche pour voir tous les appartements →</div>
+    <div class="grid-wrap"><table class="grid" id="grid"></table></div>
+    <div class="settings">
+      <label for="start-month">Premier mois :</label>
+      <input type="month" id="start-month" onchange="changeStart(this.value)" style="font-family:var(--font-mono);font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text)">
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="card-title">Dépenses</span><span class="card-meta" id="dep-meta"></span></div>
+    <div class="dep-form" id="dep-form">
+      <input type="text" id="dep-desig" list="dep-suggest" placeholder="Désignation (ex : Ménage novembre)" autocomplete="off">
+      <datalist id="dep-suggest">
+        <option value="Ménage"></option>
+        <option value="Électricité escalier"></option>
+        <option value="Changement ampoule"></option>
+        <option value="Travaux"></option>
+      </datalist>
+      <div class="row">
+        <input type="date" id="dep-date" aria-label="Date">
+        <input type="number" inputmode="numeric" id="dep-montant" placeholder="Montant" aria-label="Montant en Dhs">
+        <button onclick="saveDep()">Ajouter</button>
+      </div>
+      <div class="err" id="dep-err"></div>
+    </div>
+    <div id="dep-body"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="card-title">Détail des encaissements</span><span class="card-meta" id="enc-meta"></span></div>
+    <div id="enc-body"></div>
+  </section>
+
+</main>
+
+<!-- Login -->
+<div class="modal-wrap" id="m-login">
+  <div class="modal">
+    <h2>Connexion administrateur</h2>
+    <div class="field"><label for="pwd-input">Mot de passe</label>
+      <input type="password" id="pwd-input" onkeydown="if(event.key==='Enter') confirmLogin()"></div>
+    <div class="error-msg" id="pwd-err">Mot de passe incorrect.</div>
+    <div class="modal-btns"><button class="b-cancel" onclick="closeM('m-login')">Annuler</button><button class="b-ok" onclick="confirmLogin()">Confirmer</button></div>
+  </div>
+</div>
+
+<!-- Encaissement -->
+<div class="modal-wrap" id="m-enc">
+  <div class="modal">
+    <h2>Nouvel encaissement</h2>
+    <div class="field"><label for="enc-apt">Appartement</label><select id="enc-apt"></select></div>
+    <div class="field"><label for="enc-montant">Montant (Dhs)</label><input type="number" inputmode="numeric" id="enc-montant" placeholder="100"></div>
+    <div class="field"><label for="enc-date">Date</label><input type="date" id="enc-date"></div>
+    <div style="font-size:11px;color:var(--text2)">Pour corriger une erreur, mets <b>0</b> : la case de cet appartement pour ce mois se vide.</div>
+    <div class="error-msg" id="enc-err">Indique un montant.</div>
+    <div class="modal-btns"><button class="b-cancel" onclick="closeM('m-enc')">Annuler</button><button class="b-ok" onclick="saveEnc()">Enregistrer</button></div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PWD   = "menage2026";
+const COTISATION  = 100;
+const APTS        = Array.from({length:17}, (_,i) => i+1);
+const LS_KEY      = "caisse_imm19_cache";
+const CAT_LABEL   = { menage:"Ménage", elec:"Électricité escalier", ampoule:"Changement ampoule", travaux:"Travaux", autre:"Autre" };
+const CAT_GROUP   = { menage:"menage", elec:"elec", ampoule:"travaux", travaux:"travaux", autre:"travaux" };
+const MOIS        = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+const MOIS_COURT  = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Aoû","Sep","Oct","Nov","Déc"];
+
+let data = { startMonth: "2026-11", encaissements: [], depenses: [] };
+let isAdmin = false;
+let docRef = null;
+
+// ── Firebase (même projet que l'outil cotisation porte) ──
+try {
+  firebase.initializeApp({
+    apiKey: "AIzaSyAJTdJI3h3oCFC4pPEjA4tsFNHvxogUr4A",
+    authDomain: "imm-19.firebaseapp.com",
+    projectId: "imm-19",
+    storageBucket: "imm-19.firebasestorage.app",
+    messagingSenderId: "816526963037",
+    appId: "1:816526963037:web:9372f0e217fba6aad9b8b4"
+  });
+  docRef = firebase.firestore().collection('cotisation_imm19').doc('caisse');
+} catch(e) { console.error(e); }
+
+// ── Helpers ──
+function nb(n) { return Math.round(n||0).toLocaleString('fr-FR').replace(/ | /g,' '); }
+function fmt(n) { return nb(n) + ' Dhs'; }
+function frDate(iso) { if(!iso) return '—'; const [y,m,d] = iso.split('-'); return d+'/'+m+'/'+y; }
+function todayIso() { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function sum(arr) { return arr.reduce((s,x) => s + (Number(x.montant)||0), 0); }
+function byDateDesc(a,b) { return (b.date||'').localeCompare(a.date||''); }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function setSync(state, label) { const d=document.getElementById('sync-dot'); d.className='sync-dot '+state; d.title=label; }
+
+// Liste des mois affichés : du premier mois jusqu'au mois en cours (ou au dernier mois ayant un encaissement)
+function monthKeys() {
+  const [sy, sm] = data.startMonth.split('-').map(Number);
+  const now = new Date();
+  let end = now.getFullYear()*12 + now.getMonth();
+  data.encaissements.forEach(e => { const [y,m] = e.date.split('-').map(Number); end = Math.max(end, y*12 + m - 1); });
+  const keys = [];
+  for (let i = sy*12 + sm - 1; i <= end; i++) keys.push(Math.floor(i/12) + '-' + String(i%12 + 1).padStart(2,'0'));
+  return keys;
+}
+function monthsDue() {
+  const [sy, sm] = data.startMonth.split('-').map(Number);
+  const now = new Date();
+  return Math.max(0, (now.getFullYear()-sy)*12 + (now.getMonth()+1 - sm) + 1);
+}
+function mLabel(k, short) { const [y,m] = k.split('-').map(Number); return short ? MOIS_COURT[m-1] + ' ' + String(y).slice(2) : MOIS[m-1] + ' ' + y; }
+function cellAmount(apt, mk) { return sum(data.encaissements.filter(e => Number(e.apt) === apt && e.date.slice(0,7) === mk)); }
+function aptTotal(apt) { return sum(data.encaissements.filter(e => Number(e.apt) === apt && e.date.slice(0,7) >= data.startMonth)); }
+function monthTotal(mk) { return sum(data.encaissements.filter(e => e.date.slice(0,7) === mk)); }
+function solde(apt) { return aptTotal(apt) - monthsDue() * COTISATION; }
+function soldeTxt(s) { return s > 0 ? '+' + nb(s) : s < 0 ? '-' + nb(-s) : '0'; }
+
+function totals() {
+  const enc = sum(data.encaissements);
+  const t = { enc, menage:0, elec:0, travaux:0 };
+  data.depenses.forEach(d => { const g = CAT_GROUP[d.cat] || 'travaux'; t[g] += (Number(d.montant)||0); });
+  t.caisse = enc - t.menage - t.elec - t.travaux;
+  return t;
+}
+const CHEVRON = '<span class="arrow"><svg viewBox="0 0 8 8" fill="none"><path d="M3 1.5L5.5 4L3 6.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+let openMonths = null;
+let openEncMonths = new Set([todayIso().slice(0,7)]);  // mois en cours ouvert par défaut
+function encGroups() {
+  const map = {};
+  data.encaissements.forEach(e => { const mk = e.date.slice(0,7); (map[mk] = map[mk] || []).push(e); });
+  return Object.keys(map).sort().reverse().map(mk => ({ mk, items: map[mk].sort((a,b) => byDateDesc(a,b) || a.apt - b.apt), total: sum(map[mk]) }));
+}
+function toggleEncMonth(mk) { openEncMonths.has(mk) ? openEncMonths.delete(mk) : openEncMonths.add(mk); render(); }
+function depGroups() {
+  const map = {};
+  data.depenses.forEach(d => { const mk = d.date.slice(0,7); (map[mk] = map[mk] || []).push(d); });
+  return Object.keys(map).sort().reverse().map(mk => ({ mk, items: map[mk].sort(byDateDesc), total: sum(map[mk]) }));
+}
+function toggleMonth(mk) { openMonths.has(mk) ? openMonths.delete(mk) : openMonths.add(mk); render(); }
+function depLabel(d) { return d.designation || CAT_LABEL[d.cat] || ''; }
+// Range la dépense dans Ménage / Électricité / Travaux d'après sa désignation
+function guessCat(txt) {
+  const t = txt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (t.includes('menage') || t.includes('nettoyage') || t.includes('femme de menage')) return 'menage';
+  if (t.includes('electricite') || t.includes('facture lydec') || t.includes('lydec') || t.includes('compteur')) return 'elec';
+  return 'travaux';
+}
+
+// ── Rendu ──
+function render() {
+  document.getElementById('main').classList.toggle('admin', isAdmin);
+  document.getElementById('actions').classList.toggle('visible', isAdmin);
+  document.getElementById('start-month').value = data.startMonth;
+
+  const t = totals();
+  document.getElementById('c-caisse').textContent  = fmt(t.caisse);
+  document.getElementById('c-enc').textContent     = fmt(t.enc);
+  document.getElementById('c-menage').textContent  = fmt(t.menage);
+  document.getElementById('c-elec').textContent    = fmt(t.elec);
+  document.getElementById('c-travaux').textContent = fmt(t.travaux);
+  document.getElementById('c-date').textContent    = 'Situation au ' + frDate(todayIso());
+
+  renderGrid();
+
+  // Dépenses
+  const deps = [...data.depenses].sort(byDateDesc);
+  document.getElementById('dep-meta').textContent = deps.length + ' opération' + (deps.length>1?'s':'');
+  const groups = depGroups();
+  if (openMonths === null) openMonths = new Set(groups.length ? [groups[0].mk] : []);
+  document.getElementById('dep-body').innerHTML = deps.length === 0
+    ? '<div class="empty">Aucune dépense pour l\'instant.</div>'
+    : '<table class="list"><thead><tr><th>Mois</th><th>Désignation</th><th class="r">Montant</th><th></th></tr></thead><tbody>' +
+      groups.map(g => {
+        const open = openMonths.has(g.mk);
+        let r = `<tr class="mrow${open?' open':''}" onclick="toggleMonth('${g.mk}')"><td>${CHEVRON} ${mLabel(g.mk)}</td><td>Dépenses du mois de ${mLabel(g.mk).split(' ')[0].toLowerCase()}</td><td class="r num">${fmt(g.total)}</td><td></td></tr>`;
+        if (open) r += g.items.map(d => `<tr class="drow"><td class="num">${frDate(d.date)}</td><td>${esc(depLabel(d))}</td><td class="r num">${fmt(d.montant)}</td><td class="r"><button class="del" aria-label="Supprimer" onclick="event.stopPropagation();delItem('depenses','${d.id}')">×</button></td></tr>`).join('');
+        return r;
+      }).join('') +
+      '</tbody></table>';
+
+  // Détail encaissements
+  const encs = [...data.encaissements].sort(byDateDesc);
+  document.getElementById('enc-meta').textContent = encs.length + ' versement' + (encs.length>1?'s':'');
+  document.getElementById('enc-body').innerHTML = encs.length === 0
+    ? '<div class="empty">Aucun encaissement pour l\'instant.</div>'
+    : '<table class="list"><thead><tr><th>Mois</th><th>Appart</th><th class="r">Montant</th><th></th></tr></thead><tbody>' +
+      encGroups().map(g => {
+        const open = openEncMonths.has(g.mk);
+        let r = `<tr class="mrow${open?' open':''}" onclick="toggleEncMonth('${g.mk}')"><td>${CHEVRON} ${mLabel(g.mk)}</td><td>${g.items.length} versement${g.items.length>1?'s':''}</td><td class="r num">${fmt(g.total)}</td><td></td></tr>`;
+        if (open) r += g.items.map(e => `<tr class="drow"><td class="num">${frDate(e.date)}</td><td class="num">Apt ${e.apt}</td><td class="r num">${fmt(e.montant)}</td><td class="r"><button class="del" aria-label="Supprimer" onclick="event.stopPropagation();delItem('encaissements','${e.id}')">×</button></td></tr>`).join('');
+        return r;
+      }).join('') +
+      '</tbody></table>';
+}
+
+function renderGrid() {
+  const keys = monthKeys();
+  const md = monthsDue();
+  document.getElementById('grid-meta').textContent = md + ' mois dû' + (md>1?'s':'') + ' = ' + fmt(md*COTISATION) + ' / appart';
+
+  let h = '<colgroup><col class="c-mois">' + APTS.map(() => '<col>').join('') + '<col class="c-tot"></colgroup>';
+  h += '<thead><tr><th class="mois">Mois</th>' + APTS.map(a => `<th>A${a}</th>`).join('') + '<th class="tot">Total</th></tr></thead><tbody>';
+  keys.forEach(k => {
+    h += `<tr><th class="mois">${mLabel(k, true)}</th>`;
+    APTS.forEach(a => {
+      const v = cellAmount(a, k);
+      const cls = v >= COTISATION ? 'full' : v > 0 ? 'part' : 'zero';
+      h += `<td class="cell ${cls}" onclick="cellTap(${a},'${k}')">${v ? nb(v) : '·'}</td>`;
+    });
+    h += `<td class="tot">${nb(monthTotal(k))}</td></tr>`;
+  });
+  // Total cumulé par appartement
+  let grand = 0;
+  h += '<tr class="sum"><th class="mois">Total</th>';
+  APTS.forEach(a => { const v = aptTotal(a); grand += v; h += `<td>${nb(v)}</td>`; });
+  h += `<td class="tot">${nb(grand)}</td></tr>`;
+  h += '</tbody>';
+  document.getElementById('grid').innerHTML = h;
+}
+
+// ── Stockage ──
+function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e) {} }
+function loadLocal() { try { const r = localStorage.getItem(LS_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; } }
+function normalize(d) { return { startMonth: d.startMonth || "2026-11", encaissements: d.encaissements || [], depenses: d.depenses || [] }; }
+
+async function load() {
+  const c = loadLocal();
+  if (c) data = normalize(c);
+  render();
+  setSync('syncing', 'Chargement...');
+  if (!docRef) { setSync('error', 'Hors ligne'); return; }
+  try {
+    const snap = await docRef.get();
+    if (snap.exists) data = normalize(snap.data());
+    saveLocal(); render();
+    setSync('ok', 'Synchronisé');
+  } catch(e) { console.error(e); setSync('error', 'Hors ligne — données locales'); }
+}
+async function save() {
+  saveLocal(); render();
+  setSync('syncing', 'Sauvegarde...');
+  try { await docRef.set(data); setSync('ok', 'Sauvegardé'); }
+  catch(e) { console.error(e); setSync('error', 'Non sauvegardé'); alert("La sauvegarde en ligne a échoué. Vérifie ta connexion internet puis réessaie."); }
+}
+
+// ── Saisie ──
+function openM(id) { document.getElementById(id).classList.add('open'); }
+function closeM(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-wrap').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+
+function openEnc(apt, mk) {
+  const sel = document.getElementById('enc-apt');
+  if (!sel.options.length) sel.innerHTML = APTS.map(a => `<option value="${a}">Apt ${a}</option>`).join('');
+  sel.value = apt || 1;
+  const today = todayIso();
+  document.getElementById('enc-date').value = (mk && today.slice(0,7) !== mk) ? mk + '-01' : today;
+  document.getElementById('enc-montant').value = '';
+  document.getElementById('enc-err').style.display = 'none';
+  openM('m-enc');
+}
+function cellTap(apt, mk) { if (isAdmin) openEnc(apt, mk); }
+function saveEnc() {
+  const raw = document.getElementById('enc-montant').value.trim();
+  const montant = Number(raw);
+  const apt = Number(document.getElementById('enc-apt').value);
+  const date = document.getElementById('enc-date').value || todayIso();
+  if (raw === '' || isNaN(montant) || montant < 0) { document.getElementById('enc-err').style.display = 'block'; return; }
+  if (montant === 0) {
+    // 0 = vider la case : supprime les versements de cet appartement pour ce mois
+    const mk = date.slice(0,7);
+    data.encaissements = data.encaissements.filter(e => !(Number(e.apt) === apt && e.date.slice(0,7) === mk));
+  } else {
+    data.encaissements.push({ id: uid(), apt, montant, date });
+  }
+  closeM('m-enc'); save();
+}
+
+function openDep() {
+  document.getElementById('dep-form').scrollIntoView({ behavior:'smooth', block:'center' });
+  setTimeout(() => document.getElementById('dep-desig').focus(), 300);
+}
+function resetDepForm() {
+  document.getElementById('dep-desig').value = '';
+  document.getElementById('dep-montant').value = '';
+  document.getElementById('dep-date').value = todayIso();
+  document.getElementById('dep-err').style.display = 'none';
+}
+function saveDep() {
+  const designation = document.getElementById('dep-desig').value.trim();
+  const montant = Number(document.getElementById('dep-montant').value);
+  const err = document.getElementById('dep-err');
+  if (!designation) { err.textContent = 'Indique la désignation de la dépense.'; err.style.display = 'block'; return; }
+  if (!montant || montant <= 0) { err.textContent = 'Indique le montant.'; err.style.display = 'block'; return; }
+  data.depenses.push({ id: uid(), cat: guessCat(designation), designation, montant, date: document.getElementById('dep-date').value || todayIso() });
+  resetDepForm(); save();
+}
+document.getElementById('dep-montant').addEventListener('keydown', e => { if (e.key === 'Enter') saveDep(); });
+
+function delItem(list, id) {
+  if (!isAdmin) return;
+  const it = data[list].find(x => x.id === id);
+  if (!it) return;
+  if (!confirm('Supprimer cette ligne (' + frDate(it.date) + ', ' + fmt(it.montant) + ') ?')) return;
+  data[list] = data[list].filter(x => x.id !== id);
+  save();
+}
+function changeStart(v) { if (!isAdmin || !v) return; data.startMonth = v; save(); }
+
+// ── Admin ──
+function handleAdminBtn() {
+  if (isAdmin) {
+    isAdmin = false;
+    const b = document.getElementById('admin-btn'); b.textContent = 'Connexion admin'; b.classList.remove('danger');
+    render();
+  } else {
+    document.getElementById('pwd-input').value = '';
+    document.getElementById('pwd-err').style.display = 'none';
+    openM('m-login');
+    setTimeout(() => document.getElementById('pwd-input').focus(), 100);
+  }
+}
+function confirmLogin() {
+  if (document.getElementById('pwd-input').value === ADMIN_PWD) {
+    isAdmin = true; closeM('m-login');
+    const b = document.getElementById('admin-btn'); b.textContent = 'Déconnexion'; b.classList.add('danger');
+    render();
+  } else {
+    document.getElementById('pwd-err').style.display = 'block';
+    document.getElementById('pwd-input').value = '';
+  }
+}
+
+// ── PDF (une page tant que les données tiennent) ──
+function makePdf() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const W = 210, M = 12;
+  const green = [45,106,79], grey = [107,103,96], ink = [26,25,22];
+  const t = totals();
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(...ink);
+  doc.text('Caisse - Immeuble 19', M, 16);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...grey);
+  doc.text('Cotisation : 100 Dhs / mois / appartement   |   Situation au ' + frDate(todayIso()), M, 21);
+
+  // Bloc caisse (compact)
+  const bx = M, by = 25, bw = W-2*M, bh = 30;
+  doc.setFillColor(...green); doc.roundedRect(bx, by, bw, bh, 2.5, 2.5, 'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(9);
+  const left = [['Total encaissé', fmt(t.enc)], ['- Ménage', fmt(t.menage)], ['- Électricité', fmt(t.elec)], ['- Travaux', fmt(t.travaux)]];
+  let y = by + 7;
+  left.forEach(r => { doc.text(r[0], bx+5, y); doc.text(r[1], bx+70, y, { align:'right' }); y += 5.5; });
+  doc.setDrawColor(255,255,255); doc.setLineWidth(0.2); doc.line(bx+90, by+6, bx+90, by+bh-6);
+  doc.setFontSize(9); doc.text('CAISSE', bx+bw-5, by+11, { align:'right' });
+  doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.text(fmt(t.caisse), bx+bw-5, by+22, { align:'right' });
+
+  const head = { fillColor:[240,237,230], textColor:ink, fontStyle:'bold', fontSize:7.5, halign:'center', cellPadding:1.6 };
+  const sec = (title, yy) => { doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(...ink); doc.text(title, M, yy); };
+
+  // Grille mois x appartements
+  const keys = monthKeys();
+  const md = monthsDue();
+  sec('Cotisations par mois (Dhs)', by + bh + 8);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...grey);
+  doc.text(md + ' mois dus = ' + fmt(md*COTISATION) + ' par appartement', W-M, by + bh + 8, { align:'right' });
+
+  const gridBody = keys.map(k => [mLabel(k, true), ...APTS.map(a => { const v = cellAmount(a,k); return v ? nb(v) : '-'; }), nb(monthTotal(k))]);
+  let grand = 0;
+  const totRow = ['Total', ...APTS.map(a => { const v = aptTotal(a); grand += v; return nb(v); }), nb(grand)];
+  const nBody = gridBody.length;
+  doc.autoTable({
+    startY: by + bh + 10, margin:{ left:M, right:M }, theme:'grid',
+    head: [['Mois', ...APTS.map(a => 'A'+a), 'Total']],
+    body: [...gridBody, totRow],
+    headStyles: { ...head, fillColor:[255,255,255], textColor:grey },
+    styles: { fontSize:7.5, halign:'center', cellPadding:1.6, lineColor:[221,217,208], lineWidth:0.15, textColor:ink },
+    columnStyles: { 0:{ halign:'left', fontStyle:'bold', cellWidth:15 }, 18:{ fontStyle:'bold', cellWidth:14 } },
+    didParseCell: (h) => {
+      if (h.section !== 'body') return;
+      const r = h.row.index, c = h.column.index;
+      if (r >= nBody) { h.cell.styles.fontStyle = 'bold'; }
+      if (r < nBody && c >= 1 && c <= 17) {
+        const v = cellAmount(APTS[c-1], keys[r]);
+        if (v >= COTISATION) { h.cell.styles.fillColor = [233,246,236]; h.cell.styles.textColor = green; }
+        else if (v > 0) { h.cell.styles.fontStyle = 'bold'; }
+        else h.cell.styles.textColor = [168,164,158];
+      }
+    }
+  });
+  let yy = doc.lastAutoTable.finalY + 4;
+
+  // Dépenses
+  yy += 8;
+  if (yy > 265) { doc.addPage(); yy = 18; }
+  sec('Dépenses', yy);
+  const groups = depGroups();
+  const pBody = [], kinds = [];
+  groups.forEach((g, i) => {
+    const open = openMonths && openMonths.has(g.mk);
+    pBody.push(['     ' + mLabel(g.mk), 'Dépenses du mois de ' + mLabel(g.mk).split(' ')[0].toLowerCase(), fmt(g.total)]); kinds.push(open ? 'month-open' : 'month');
+    if (open) g.items.forEach(d => { pBody.push(['     ' + frDate(d.date), depLabel(d), fmt(d.montant)]); kinds.push('detail'); });
+  });
+  doc.autoTable({
+    startY: yy + 2, margin:{ left:M, right:M },
+    head: [['Mois','Désignation','Montant']],
+    body: pBody.length ? pBody : [['','Aucune dépense','']],
+    theme:'plain',
+    headStyles: { ...head, fillColor:[255,255,255], halign:'left', fontSize:8.5, cellPadding:2 },
+    styles: { fontSize:8.5, cellPadding:2, textColor:ink, lineColor:[221,217,208], lineWidth:{ bottom:0.15 } },
+    columnStyles: { 0:{ cellWidth:30 }, 2:{ halign:'right', cellWidth:28 } },
+    didParseCell: (h) => {
+      if (h.section==='head' && h.column.index===2) h.cell.styles.halign = 'right';
+      if (h.section==='body' && pBody.length) {
+        if (kinds[h.row.index].startsWith('month')) h.cell.styles.fontStyle = 'bold';
+        else { h.cell.styles.textColor = grey; h.cell.styles.fontSize = 8; h.cell.styles.fillColor = [251,250,248]; }
+      }
+    },
+    didDrawCell: (h) => {
+      if (h.section !== 'body' || h.column.index !== 0 || !pBody.length) return;
+      const k = kinds[h.row.index]; if (!k.startsWith('month')) return;
+      const x = h.cell.x + 2.5, cy = h.cell.y + h.cell.height/2;
+      doc.setDrawColor(150,146,140); doc.setLineWidth(0.3); doc.setLineCap('round'); doc.setLineJoin('round');
+      if (k === 'month-open') doc.lines([[0.9,0.9],[0.9,-0.9]], x, cy-0.45);
+      else doc.lines([[0.9,0.9],[-0.9,0.9]], x+0.4, cy-0.9);
+    }
+  });
+  if (groups.some(g => !(openMonths && openMonths.has(g.mk)))) {
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...grey);
+    doc.text('Le détail des mois réduits est consultable sur la page en ligne.', M, doc.lastAutoTable.finalY + 4);
+  }
+
+  const n = doc.getNumberOfPages();
+  for (let i=1; i<=n; i++) {
+    doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...grey);
+    doc.text('Immeuble 19 - Caisse de l\'immeuble' + (n>1 ? '   |   Page ' + i + '/' + n : ''), W/2, 290, { align:'center' });
+  }
+  const d = todayIso().split('-');
+  doc.save('Caisse_Immeuble19_' + d[2] + '-' + d[1] + '-' + d[0] + '.pdf');
+}
+
+resetDepForm();
+load();
+</script>
+</body>
+</html>
