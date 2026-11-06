@@ -161,7 +161,7 @@
       <div class="calc-row"><span>Total encaissé</span><span class="num" id="c-enc">0 Dhs</span></div>
       <div class="calc-row minus"><span>- Femme de ménage</span><span class="num" id="c-menage">0 Dhs</span></div>
       <div class="calc-row minus"><span>- Produits de ménage</span><span class="num" id="c-produit">0 Dhs</span></div>
-      <div class="calc-row minus"><span>- Électricité</span><span class="num" id="c-elec">0 Dhs</span></div>
+      <div class="calc-row minus"><span>- Électricité (escalier)</span><span class="num" id="c-elec">0 Dhs</span></div>
       <div class="calc-row minus"><span>- Travaux</span><span class="num" id="c-travaux">0 Dhs</span></div>
     </div>
   </section>
@@ -524,7 +524,7 @@ function makePdf() {
   const bx = M, by = 25, bw = W-2*M, bh = 34;
   doc.setFillColor(...green); doc.roundedRect(bx, by, bw, bh, 2.5, 2.5, 'F');
   doc.setTextColor(255,255,255); doc.setFontSize(9);
-  const left = [['Total encaissé', fmt(t.enc)], ['- Femme de ménage', fmt(t.menage)], ['- Produits de ménage', fmt(t.produit)], ['- Électricité', fmt(t.elec)], ['- Travaux', fmt(t.travaux)]];
+  const left = [['Total encaissé', fmt(t.enc)], ['- Femme de ménage', fmt(t.menage)], ['- Produits de ménage', fmt(t.produit)], ['- Électricité (escalier)', fmt(t.elec)], ['- Travaux', fmt(t.travaux)]];
   let y = by + 7;
   left.forEach(r => { doc.text(r[0], bx+5, y); doc.text(r[1], bx+75, y, { align:'right' }); y += 5.2; });
   doc.setDrawColor(255,255,255); doc.setLineWidth(0.2); doc.line(bx+90, by+6, bx+90, by+bh-6);
