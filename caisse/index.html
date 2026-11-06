@@ -159,7 +159,8 @@
     <div class="caisse-rule" id="c-date">—</div>
     <div class="calc">
       <div class="calc-row"><span>Total encaissé</span><span class="num" id="c-enc">0 Dhs</span></div>
-      <div class="calc-row minus"><span>- Ménage</span><span class="num" id="c-menage">0 Dhs</span></div>
+      <div class="calc-row minus"><span>- Femme de ménage</span><span class="num" id="c-menage">0 Dhs</span></div>
+      <div class="calc-row minus"><span>- Produits de ménage</span><span class="num" id="c-produit">0 Dhs</span></div>
       <div class="calc-row minus"><span>- Électricité</span><span class="num" id="c-elec">0 Dhs</span></div>
       <div class="calc-row minus"><span>- Travaux</span><span class="num" id="c-travaux">0 Dhs</span></div>
     </div>
@@ -185,9 +186,10 @@
   <section class="card">
     <div class="card-head"><span class="card-title">Dépenses</span><span class="card-meta" id="dep-meta"></span></div>
     <div class="dep-form" id="dep-form">
-      <input type="text" id="dep-desig" list="dep-suggest" placeholder="Désignation (ex : Ménage novembre)" autocomplete="off">
+      <input type="text" id="dep-desig" list="dep-suggest" placeholder="Désignation (ex : Femme de ménage novembre)" autocomplete="off">
       <datalist id="dep-suggest">
-        <option value="Ménage"></option>
+        <option value="Femme de ménage"></option>
+        <option value="Produits de ménage"></option>
         <option value="Électricité escalier"></option>
         <option value="Changement ampoule"></option>
         <option value="Travaux"></option>
@@ -238,8 +240,8 @@ const ADMIN_PWD   = "menage2026";
 const COTISATION  = 100;
 const APTS        = Array.from({length:17}, (_,i) => i+1);
 const LS_KEY      = "caisse_imm19_cache";
-const CAT_LABEL   = { menage:"Ménage", elec:"Électricité escalier", ampoule:"Changement ampoule", travaux:"Travaux", autre:"Autre" };
-const CAT_GROUP   = { menage:"menage", elec:"elec", ampoule:"travaux", travaux:"travaux", autre:"travaux" };
+const CAT_LABEL   = { menage:"Femme de ménage", produit:"Produits de ménage", elec:"Électricité escalier", ampoule:"Changement ampoule", travaux:"Travaux", autre:"Autre" };
+const CAT_GROUP   = { menage:"menage", produit:"produit", elec:"elec", ampoule:"travaux", travaux:"travaux", autre:"travaux" };
 const MOIS        = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const MOIS_COURT  = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Aoû","Sep","Oct","Nov","Déc"];
 
@@ -295,9 +297,9 @@ function soldeTxt(s) { return s > 0 ? '+' + nb(s) : s < 0 ? '-' + nb(-s) : '0'; 
 
 function totals() {
   const enc = sum(data.encaissements);
-  const t = { enc, menage:0, elec:0, travaux:0 };
+  const t = { enc, menage:0, produit:0, elec:0, travaux:0 };
   data.depenses.forEach(d => { const g = CAT_GROUP[d.cat] || 'travaux'; t[g] += (Number(d.montant)||0); });
-  t.caisse = enc - t.menage - t.elec - t.travaux;
+  t.caisse = enc - t.menage - t.produit - t.elec - t.travaux;
   return t;
 }
 const CHEVRON = '<span class="arrow"><svg viewBox="0 0 8 8" fill="none"><path d="M3 1.5L5.5 4L3 6.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
@@ -316,9 +318,10 @@ function depGroups() {
 }
 function toggleMonth(mk) { openMonths.has(mk) ? openMonths.delete(mk) : openMonths.add(mk); render(); }
 function depLabel(d) { return d.designation || CAT_LABEL[d.cat] || ''; }
-// Range la dépense dans Ménage / Électricité / Travaux d'après sa désignation
+// Range la dépense dans Femme de ménage / Produits de ménage / Électricité / Travaux d'après sa désignation
 function guessCat(txt) {
   const t = txt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (t.includes('produit') || t.includes('javel') || t.includes('detergent') || t.includes('balai') || t.includes('serpilliere')) return 'produit';
   if (t.includes('menage') || t.includes('nettoyage') || t.includes('femme de menage')) return 'menage';
   if (t.includes('electricite') || t.includes('facture lydec') || t.includes('lydec') || t.includes('compteur')) return 'elec';
   return 'travaux';
@@ -334,6 +337,7 @@ function render() {
   document.getElementById('c-caisse').textContent  = fmt(t.caisse);
   document.getElementById('c-enc').textContent     = fmt(t.enc);
   document.getElementById('c-menage').textContent  = fmt(t.menage);
+  document.getElementById('c-produit').textContent = fmt(t.produit);
   document.getElementById('c-elec').textContent    = fmt(t.elec);
   document.getElementById('c-travaux').textContent = fmt(t.travaux);
   document.getElementById('c-date').textContent    = 'Situation au ' + frDate(todayIso());
@@ -387,11 +391,6 @@ function renderGrid() {
     });
     h += `<td class="tot">${nb(monthTotal(k))}</td></tr>`;
   });
-  // Total cumulé par appartement
-  let grand = 0;
-  h += '<tr class="sum"><th class="mois">Total</th>';
-  APTS.forEach(a => { const v = aptTotal(a); grand += v; h += `<td>${nb(v)}</td>`; });
-  h += `<td class="tot">${nb(grand)}</td></tr>`;
   h += '</tbody>';
   document.getElementById('grid').innerHTML = h;
 }
@@ -522,15 +521,15 @@ function makePdf() {
   doc.text('Cotisation : 100 Dhs / mois / appartement   |   Situation au ' + frDate(todayIso()), M, 21);
 
   // Bloc caisse (compact)
-  const bx = M, by = 25, bw = W-2*M, bh = 30;
+  const bx = M, by = 25, bw = W-2*M, bh = 34;
   doc.setFillColor(...green); doc.roundedRect(bx, by, bw, bh, 2.5, 2.5, 'F');
   doc.setTextColor(255,255,255); doc.setFontSize(9);
-  const left = [['Total encaissé', fmt(t.enc)], ['- Ménage', fmt(t.menage)], ['- Électricité', fmt(t.elec)], ['- Travaux', fmt(t.travaux)]];
+  const left = [['Total encaissé', fmt(t.enc)], ['- Femme de ménage', fmt(t.menage)], ['- Produits de ménage', fmt(t.produit)], ['- Électricité', fmt(t.elec)], ['- Travaux', fmt(t.travaux)]];
   let y = by + 7;
-  left.forEach(r => { doc.text(r[0], bx+5, y); doc.text(r[1], bx+70, y, { align:'right' }); y += 5.5; });
+  left.forEach(r => { doc.text(r[0], bx+5, y); doc.text(r[1], bx+75, y, { align:'right' }); y += 5.2; });
   doc.setDrawColor(255,255,255); doc.setLineWidth(0.2); doc.line(bx+90, by+6, bx+90, by+bh-6);
-  doc.setFontSize(9); doc.text('CAISSE', bx+bw-5, by+11, { align:'right' });
-  doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.text(fmt(t.caisse), bx+bw-5, by+22, { align:'right' });
+  doc.setFontSize(9); doc.text('CAISSE', bx+bw-5, by+13, { align:'right' });
+  doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.text(fmt(t.caisse), bx+bw-5, by+24, { align:'right' });
 
   const head = { fillColor:[240,237,230], textColor:ink, fontStyle:'bold', fontSize:7.5, halign:'center', cellPadding:1.6 };
   const sec = (title, yy) => { doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(...ink); doc.text(title, M, yy); };
@@ -543,13 +542,11 @@ function makePdf() {
   doc.text(md + ' mois dus = ' + fmt(md*COTISATION) + ' par appartement', W-M, by + bh + 8, { align:'right' });
 
   const gridBody = keys.map(k => [mLabel(k, true), ...APTS.map(a => { const v = cellAmount(a,k); return v ? nb(v) : '-'; }), nb(monthTotal(k))]);
-  let grand = 0;
-  const totRow = ['Total', ...APTS.map(a => { const v = aptTotal(a); grand += v; return nb(v); }), nb(grand)];
   const nBody = gridBody.length;
   doc.autoTable({
     startY: by + bh + 10, margin:{ left:M, right:M }, theme:'grid',
     head: [['Mois', ...APTS.map(a => 'A'+a), 'Total']],
-    body: [...gridBody, totRow],
+    body: gridBody,
     headStyles: { ...head, fillColor:[255,255,255], textColor:grey },
     styles: { fontSize:7.5, halign:'center', cellPadding:1.6, lineColor:[221,217,208], lineWidth:0.15, textColor:ink },
     columnStyles: { 0:{ halign:'left', fontStyle:'bold', cellWidth:15 }, 18:{ fontStyle:'bold', cellWidth:14 } },
