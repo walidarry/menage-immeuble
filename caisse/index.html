@@ -55,6 +55,13 @@
   .prev-box .pl { font-size: 11px; opacity: 0.9; }
   .prev-box .pa { font-size: 16px; font-weight: 700; }
   .calc-row .lbl { unicode-bidi: plaintext; }
+  .calc-row.cat-line { align-items: center; }
+  .calc-row.cat-line .lbl { flex: 1; min-width: 0; }
+  .calc-row[dir="rtl"] .lbl { text-align: right; }
+  .mv { display: none; gap: 3px; flex-shrink: 0; }
+  .admin .mv { display: inline-flex; }
+  .mv button { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 22px; height: 20px; border-radius: 5px; font-size: 10px; line-height: 1; cursor: pointer; padding: 0; }
+  .mv button:disabled { opacity: 0.25; cursor: default; }
   .admin .calc-row.cat-line .lbl { cursor: pointer; text-decoration: underline dotted rgba(255,255,255,0.6); text-underline-offset: 3px; }
   .cat-add { display: none; margin-top: 4px; align-self: flex-start; background: none; border: 1px dashed rgba(255,255,255,0.5); color: #fff; border-radius: 6px; font-family: var(--font-main); font-size: 11px; padding: 4px 9px; cursor: pointer; }
   .admin .cat-add { display: inline-block; }
@@ -208,18 +215,15 @@
   <section class="card">
     <div class="card-head"><span class="card-title">Dépenses</span><span class="card-meta" id="dep-meta"></span></div>
     <div class="dep-form" id="dep-form">
-      <input type="text" id="dep-desig" list="dep-suggest" placeholder="Désignation (ex : Femme de ménage novembre)" autocomplete="off">
+      <input type="text" id="dep-desig" dir="auto" list="dep-suggest" placeholder="Désignation (ex : Femme de ménage novembre)" autocomplete="off">
       <datalist id="dep-suggest">
-        <option value="Femme de ménage"></option>
-        <option value="Produits de ménage"></option>
-        <option value="Électricité escalier"></option>
-        <option value="Changement ampoule"></option>
-        <option value="Travaux"></option>
+        <option value="واجب النظافة"></option>
+        <option value="مواد التنظيف"></option>
       </datalist>
       <select id="dep-cat" aria-label="Ligne de dépense" onchange="depCatTouched=true"></select>
       <div class="row">
         <input type="date" id="dep-date" aria-label="Date">
-        <input type="number" inputmode="numeric" id="dep-montant" placeholder="Montant" aria-label="Montant en Dhs">
+        <input type="text" inputmode="decimal" class="amt" id="dep-montant" placeholder="Montant" aria-label="Montant en Dhs">
         <button onclick="saveDep()">Ajouter</button>
       </div>
       <div class="err" id="dep-err"></div>
@@ -250,7 +254,7 @@
   <div class="modal">
     <h2>Nouvel encaissement</h2>
     <div class="field"><label for="enc-apt">Appartement</label><select id="enc-apt"></select></div>
-    <div class="field"><label for="enc-montant">Montant (Dhs)</label><input type="number" inputmode="numeric" id="enc-montant" placeholder="100"></div>
+    <div class="field"><label for="enc-montant">Montant (Dhs)</label><input type="text" inputmode="decimal" class="amt" id="enc-montant" placeholder="100"></div>
     <div class="field"><label for="enc-date">Date du paiement</label><input type="date" id="enc-date"></div>
     <div class="two">
       <div class="field"><label for="enc-mois">Mois payé (à partir de)</label><select id="enc-mois" onchange="encPreview()"></select></div>
@@ -434,11 +438,25 @@ function fillDepCats() {
   sel.innerHTML = data.categories.map(c => `<option value="${c.id}">${esc(c.label)}</option>`).join('');
   if (data.categories.some(c => c.id === cur)) sel.value = cur;
 }
-document.getElementById('dep-desig').addEventListener('input', e => {
-  if (depCatTouched) return;
-  const g = guessCat(e.target.value);
-  if (data.categories.some(c => c.id === g)) document.getElementById('dep-cat').value = g;
-});
+// Chiffres arabes (٠١٢…) tapés au clavier → chiffres normaux (012…)
+function latinDigits(v) {
+  return String(v).replace(/[\u0660-\u0669]/g, c => c.charCodeAt(0) - 0x0660)
+                  .replace(/[\u06F0-\u06F9]/g, c => c.charCodeAt(0) - 0x06F0)
+                  .replace(/[\u066B,]/g, '.').replace(/[^0-9.]/g, '');
+}
+document.addEventListener('input', e => {
+  if (!e.target.classList || !e.target.classList.contains('amt')) return;
+  const v = latinDigits(e.target.value);
+  if (v !== e.target.value) e.target.value = v;
+}, true);
+// Change l'ordre des lignes du cadran vert
+function moveCat(id, d) {
+  if (!isAdmin) return;
+  const i = data.categories.findIndex(c => c.id === id), j = i + d;
+  if (i < 0 || j < 0 || j >= data.categories.length) return;
+  const arr = [...data.categories]; [arr[i], arr[j]] = [arr[j], arr[i]];
+  data.categories = arr; save();
+}
 
 // ── Rendu ──
 function render() {
@@ -457,7 +475,8 @@ function render() {
   let c = '';
   document.getElementById('c-prev').textContent = fmt(t.report);
   c += `<div class="calc-row"><span>Encaissé en ${moisNom}</span><span class="num">${fmt(t.enc)}</span></div>`;
-  c += t.lines.map(l => `<div class="calc-row minus cat-line"><span class="lbl" dir="auto" onclick="openCat('${l.id}')">- ${esc(l.label)}</span><span class="num">${fmt(l.montant)}</span></div>`).join('');
+  const nL = t.lines.length;
+  c += t.lines.map((l, i) => `<div class="calc-row minus cat-line"${hasAr(l.label) ? ' dir="rtl"' : ''}><span class="lbl" onclick="openCat('${l.id}')">- ${esc(l.label)}</span><span class="mv" dir="ltr"><button type="button" aria-label="Monter" ${i===0?'disabled':''} onclick="moveCat('${l.id}',-1)">▲</button><button type="button" aria-label="Descendre" ${i===nL-1?'disabled':''} onclick="moveCat('${l.id}',1)">▼</button></span><span class="num" dir="ltr">${fmt(l.montant)}</span></div>`).join('');
   document.getElementById('calc').innerHTML = c;
   fillDepCats();
 
@@ -578,7 +597,7 @@ function openEnc(apt, mk) {
 }
 // Montant tapé = plusieurs fois 100 → propose automatiquement le nombre de mois
 document.getElementById('enc-montant').addEventListener('input', () => {
-  const v = Number(document.getElementById('enc-montant').value);
+  const v = Number(latinDigits(document.getElementById('enc-montant').value));
   if (!encNbTouched && v >= 2*COTISATION && v % COTISATION === 0 && v/COTISATION <= 12) document.getElementById('enc-nb').value = String(v/COTISATION);
   else if (!encNbTouched) document.getElementById('enc-nb').value = '1';
   encPreview();
@@ -591,7 +610,7 @@ function splitEnc(montant, n) {
 }
 function encPreview() {
   const box = document.getElementById('enc-preview');
-  const montant = Number(document.getElementById('enc-montant').value);
+  const montant = Number(latinDigits(document.getElementById('enc-montant').value));
   const n = Number(document.getElementById('enc-nb').value) || 1;
   const k0 = document.getElementById('enc-mois').value;
   if (!montant || !k0) { box.style.display = 'none'; return; }
@@ -601,7 +620,7 @@ function encPreview() {
 }
 function cellTap(apt, mk) { if (isAdmin) openEnc(apt, mk); }
 function saveEnc() {
-  const raw = document.getElementById('enc-montant').value.trim();
+  const raw = latinDigits(document.getElementById('enc-montant').value).trim();
   const montant = Number(raw);
   const apt = Number(document.getElementById('enc-apt').value);
   const date = document.getElementById('enc-date').value || todayIso();
@@ -630,7 +649,7 @@ function resetDepForm() {
 }
 function saveDep() {
   const designation = document.getElementById('dep-desig').value.trim();
-  const montant = Number(document.getElementById('dep-montant').value);
+  const montant = Number(latinDigits(document.getElementById('dep-montant').value));
   const err = document.getElementById('dep-err');
   if (!designation) { err.textContent = 'Indique la désignation de la dépense.'; err.style.display = 'block'; return; }
   if (!montant || montant <= 0) { err.textContent = 'Indique le montant.'; err.style.display = 'block'; return; }
@@ -752,7 +771,11 @@ function makePdf() {
   doc.setFillColor(...green); doc.roundedRect(bx, by, bw, bh, 2.5, 2.5, 'F');
   doc.setTextColor(255,255,255); doc.setFontSize(9);
   let y = by + 7;
-  left.forEach(r => { pdfText(doc, r[0], bx+5, y, { maxW: 58 }); doc.text(r[1], bx+90, y, { align:'right' }); y += 5.2; });
+  left.forEach(r => {
+    if (hasAr(r[0])) { pdfText(doc, r[0], bx+90, y, { maxW: 58, align:'right' }); doc.text(r[1], bx+5, y); }
+    else { pdfText(doc, r[0], bx+5, y, { maxW: 58 }); doc.text(r[1], bx+90, y, { align:'right' }); }
+    y += 5.2;
+  });
   doc.setDrawColor(255,255,255); doc.setLineWidth(0.2); doc.line(bx+100, by+6, bx+100, by+bh-6);
   doc.setFontSize(9); doc.text('CAISSE', bx+bw-5, by+13, { align:'right' });
   doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.text(fmt(t.caisse), bx+bw-5, by+24, { align:'right' });
