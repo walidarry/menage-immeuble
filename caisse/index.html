@@ -789,23 +789,25 @@ function makePdf() {
   const left = [];
   left.push(['Encaissé en ' + moisNom, fmt(t.enc)]);
   t.lines.forEach(l => left.push(['- ' + l.label, fmt(l.montant)]));
-  const bx = M, by = 25, bw = W-2*M, bh = Math.max(38, 8 + left.length * 5.2 + 2);
+  // Bloc vert de droite à gauche : détails à droite, caisse à gauche
+  const bx = M, by = 25, bw = W-2*M, bh = Math.max(42, 8 + left.length * 5.4 + 2);
+  const R = bx + bw - 5;                       // bord droit des détails
   doc.setFillColor(...green); doc.roundedRect(bx, by, bw, bh, 2.5, 2.5, 'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(9);
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','normal'); doc.setFontSize(9);
   let y = by + 7;
   left.forEach(r => {
-    if (hasAr(r[0])) { pdfText(doc, r[0], bx+90, y, { maxW: 58, align:'right', scale: 1.05 }); doc.text(r[1], bx+5, y); }
-    else { pdfText(doc, r[0], bx+5, y, { maxW: 58, scale: 1.05 }); doc.text(r[1], bx+90, y, { align:'right' }); }
-    y += 5.2;
+    pdfText(doc, r[0], R, y, { maxW: 62, align:'right', scale: 1.1 });
+    doc.text(r[1], bx+96, y);
+    y += 5.4;
   });
-  doc.setDrawColor(255,255,255); doc.setLineWidth(0.2); doc.line(bx+100, by+6, bx+100, by+bh-6);
-  doc.setFontSize(9); doc.text('CAISSE', bx+bw-5, by+13, { align:'right' });
-  doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.text(fmt(t.caisse), bx+bw-5, by+24, { align:'right' });
+  doc.setDrawColor(255,255,255); doc.setLineWidth(0.2); doc.line(bx+90, by+6, bx+90, by+bh-6);
+  doc.setFontSize(9); doc.text('CAISSE', bx+5, by+11);
+  doc.setFont('helvetica','bold'); doc.setFontSize(30); doc.text(fmt(t.caisse), bx+5, by+24);
   // Petit encadré : solde cumulé des mois précédents
-  doc.setFillColor(78,135,109); doc.roundedRect(bx+106, by+bh-12, bw-111, 8, 1.5, 1.5, 'F');
+  doc.setFillColor(78,135,109); doc.roundedRect(bx+5, by+bh-12, 80, 8, 1.5, 1.5, 'F');
   doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(255,255,255);
-  doc.text('Solde des mois précédents', bx+109, by+bh-7);
-  doc.setFont('helvetica','bold'); doc.text(fmt(t.report), bx+bw-8, by+bh-7, { align:'right' });
+  doc.text('Solde des mois précédents', bx+8, by+bh-7);
+  doc.setFont('helvetica','bold'); doc.text(fmt(t.report), bx+82, by+bh-7, { align:'right' });
 
   const head = { fillColor:[240,237,230], textColor:ink, fontStyle:'bold', fontSize:7.5, halign:'center', cellPadding:1.6 };
   const sec = (title, yy) => { doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(...ink); doc.text(title, M, yy); };
@@ -895,7 +897,7 @@ function makePdf() {
   const n = doc.getNumberOfPages();
   for (let i=1; i<=n; i++) {
     doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...grey);
-    doc.text('Immeuble 19 - Caisse de l\'immeuble (v3)' + (n>1 ? '   |   Page ' + i + '/' + n : ''), W/2, 290, { align:'center' });
+    doc.text('Immeuble 19 - Caisse de l\'immeuble (v4)' + (n>1 ? '   |   Page ' + i + '/' + n : ''), W/2, 290, { align:'center' });
   }
   const d = todayIso().split('-');
   doc.save('Caisse_Immeuble19_' + d[2] + '-' + d[1] + '-' + d[0] + '.pdf');
