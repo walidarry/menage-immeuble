@@ -134,6 +134,13 @@
   tr.mrow.open .arrow { transform: rotate(90deg); }
   tr.drow td { font-size: 11.5px; color: var(--text2); background: #fbfaf8; }
   tr.drow td:first-child { padding-left: 22px; }
+  /* Liste des dépenses en arabe : de droite à gauche */
+  table.list.rtl th { text-align: right; }
+  table.list.rtl .r { text-align: left; }
+  table.list.rtl tr.drow td:first-child { padding-left: 8px; padding-right: 22px; }
+  table.list.rtl tr.mrow .arrow { margin-right: 0; margin-left: 5px; transform: scaleX(-1); }
+  table.list.rtl tr.mrow.open .arrow { transform: rotate(90deg); }
+  table.list.rtl td.ar { font-size: 13.5px; color: var(--text); }
   .desig { font-size: 11px; color: var(--text2); margin-top: 2px; }
   td.ar, .ar { unicode-bidi: plaintext; }
   .lot { font-size: 10.5px; color: var(--blue); }
@@ -493,11 +500,11 @@ function render() {
   if (openMonths === null) openMonths = new Set(groups.length ? [groups[0].mk] : []);
   document.getElementById('dep-body').innerHTML = deps.length === 0
     ? '<div class="empty">Aucune dépense pour l\'instant.</div>'
-    : '<table class="list"><thead><tr><th>Mois</th><th>Désignation</th><th class="r">Montant</th><th></th></tr></thead><tbody>' +
+    : '<table class="list rtl" dir="rtl"><thead><tr><th>Mois</th><th>Désignation</th><th class="r">Montant</th><th></th></tr></thead><tbody>' +
       groups.map(g => {
         const open = openMonths.has(g.mk);
-        let r = `<tr class="mrow${open?' open':''}" onclick="toggleMonth('${g.mk}')"><td>${CHEVRON} ${mLabel(g.mk)}</td><td>Dépenses du mois de ${mLabel(g.mk).split(' ')[0].toLowerCase()}</td><td class="r num">${fmt(g.total)}</td><td></td></tr>`;
-        if (open) r += g.items.map(d => `<tr class="drow"><td class="num">${frDate(d.date)}</td><td class="ar" dir="auto">${esc(depLabel(d))}</td><td class="r num">${fmt(d.montant)}</td><td class="r"><button class="del" aria-label="Supprimer" onclick="event.stopPropagation();delItem('depenses','${d.id}')">×</button></td></tr>`).join('');
+        let r = `<tr class="mrow${open?' open':''}" onclick="toggleMonth('${g.mk}')"><td>${CHEVRON} ${mLabel(g.mk)}</td><td>Dépenses du mois de ${mLabel(g.mk).split(' ')[0].toLowerCase()}</td><td class="r num" dir="ltr">${fmt(g.total)}</td><td></td></tr>`;
+        if (open) r += g.items.map(d => `<tr class="drow"><td class="num" dir="ltr" style="text-align:right">${frDate(d.date)}</td><td class="ar" dir="auto">${esc(depLabel(d))}</td><td class="r num" dir="ltr">${fmt(d.montant)}</td><td class="r"><button class="del" aria-label="Supprimer" onclick="event.stopPropagation();delItem('depenses','${d.id}')">×</button></td></tr>`).join('');
         return r;
       }).join('') +
       '</tbody></table>';
@@ -843,21 +850,22 @@ function makePdf() {
   sec('Dépenses', yy);
   const groups = depGroups();
   const pBody = [], kinds = [];
+  // Tableau des dépenses de droite à gauche : Montant | Désignation | Mois
   groups.forEach((g, i) => {
     const open = openMonths && openMonths.has(g.mk);
-    pBody.push(['     ' + mLabel(g.mk), 'Dépenses du mois de ' + mLabel(g.mk).split(' ')[0].toLowerCase(), fmt(g.total)]); kinds.push(open ? 'month-open' : 'month');
-    if (open) g.items.forEach(d => { pBody.push(['     ' + frDate(d.date), depLabel(d), fmt(d.montant)]); kinds.push('detail'); });
+    pBody.push([fmt(g.total), 'Dépenses du mois de ' + mLabel(g.mk).split(' ')[0].toLowerCase(), mLabel(g.mk) + '     ']); kinds.push(open ? 'month-open' : 'month');
+    if (open) g.items.forEach(d => { pBody.push([fmt(d.montant), depLabel(d), frDate(d.date) + '     ']); kinds.push('detail'); });
   });
   doc.autoTable({
     startY: yy + 2, margin:{ left:M, right:M },
-    head: [['Mois','Désignation','Montant']],
+    head: [['Montant','Désignation','Mois']],
     body: pBody.length ? pBody : [['','Aucune dépense','']],
     theme:'plain',
-    headStyles: { ...head, fillColor:[255,255,255], halign:'left', fontSize:8.5, cellPadding:2 },
-    styles: { fontSize:8.5, cellPadding:2, textColor:ink, lineColor:[221,217,208], lineWidth:{ bottom:0.15 } },
-    columnStyles: { 0:{ cellWidth:30 }, 2:{ halign:'right', cellWidth:28 } },
+    headStyles: { ...head, fillColor:[255,255,255], halign:'right', fontSize:8.5, cellPadding:2 },
+    styles: { fontSize:8.5, cellPadding:2, textColor:ink, lineColor:[221,217,208], lineWidth:{ bottom:0.15 }, halign:'right' },
+    columnStyles: { 0:{ halign:'left', cellWidth:28 }, 2:{ cellWidth:34 } },
     didParseCell: (h) => {
-      if (h.section==='head' && h.column.index===2) h.cell.styles.halign = 'right';
+      if (h.section==='head' && h.column.index===0) h.cell.styles.halign = 'left';
       if (h.section==='body' && pBody.length) {
         if (kinds[h.row.index].startsWith('month')) h.cell.styles.fontStyle = 'bold';
         else { h.cell.styles.textColor = grey; h.cell.styles.fontSize = 8; h.cell.styles.fillColor = [251,250,248]; }
@@ -867,17 +875,16 @@ function makePdf() {
     },
     didDrawCell: (h) => {
       if (h.section === 'body' && h.cell.arText) {
-        const fs = h.cell.styles.fontSize, prev = doc.getFontSize();
+        const fs = h.cell.styles.fontSize;
         doc.setFontSize(fs);
-        pdfText(doc, h.cell.arText, h.cell.x + 2, h.cell.y + h.cell.height/2 + fs*0.13, { maxW: h.cell.width - 4, scale: 1.25, rgb: kinds[h.row.index] === 'detail' ? [60,58,54] : ink });
-        doc.setFontSize(prev);
+        pdfText(doc, h.cell.arText, h.cell.x + h.cell.width - 2, h.cell.y + h.cell.height/2 + fs*0.13, { maxW: h.cell.width - 4, scale: 1.45, rgb: kinds[h.row.index] === 'detail' ? [40,38,34] : ink, align: 'right' });
       }
-      if (h.section !== 'body' || h.column.index !== 0 || !pBody.length) return;
+      if (h.section !== 'body' || h.column.index !== 2 || !pBody.length) return;
       const k = kinds[h.row.index]; if (!k.startsWith('month')) return;
-      const x = h.cell.x + 2.5, cy = h.cell.y + h.cell.height/2;
+      const x = h.cell.x + h.cell.width - 3.5, cy = h.cell.y + h.cell.height/2;
       doc.setDrawColor(150,146,140); doc.setLineWidth(0.3); doc.setLineCap('round'); doc.setLineJoin('round');
-      if (k === 'month-open') doc.lines([[0.9,0.9],[0.9,-0.9]], x, cy-0.45);
-      else doc.lines([[0.9,0.9],[-0.9,0.9]], x+0.4, cy-0.9);
+      if (k === 'month-open') doc.lines([[0.9,0.9],[0.9,-0.9]], x-0.9, cy-0.45);
+      else doc.lines([[-0.9,0.9],[0.9,0.9]], x+0.4, cy-0.9);
     }
   });
   if (groups.some(g => !(openMonths && openMonths.has(g.mk)))) {
@@ -888,7 +895,7 @@ function makePdf() {
   const n = doc.getNumberOfPages();
   for (let i=1; i<=n; i++) {
     doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...grey);
-    doc.text('Immeuble 19 - Caisse de l\'immeuble' + (n>1 ? '   |   Page ' + i + '/' + n : ''), W/2, 290, { align:'center' });
+    doc.text('Immeuble 19 - Caisse de l\'immeuble (v3)' + (n>1 ? '   |   Page ' + i + '/' + n : ''), W/2, 290, { align:'center' });
   }
   const d = todayIso().split('-');
   doc.save('Caisse_Immeuble19_' + d[2] + '-' + d[1] + '-' + d[0] + '.pdf');
