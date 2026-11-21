@@ -51,6 +51,15 @@
   .calc-row { display: flex; justify-content: space-between; gap: 8px; }
   .calc-row.minus { opacity: 0.9; }
   .calc-row.total { border-top: 1px solid rgba(255,255,255,0.25); padding-top: 5px; margin-top: 2px; font-weight: 600; }
+  .calc-row.report { opacity: 0.8; font-size: 11px; }
+  .calc-row .lbl { unicode-bidi: plaintext; }
+  .admin .calc-row.cat-line .lbl { cursor: pointer; text-decoration: underline dotted rgba(255,255,255,0.6); text-underline-offset: 3px; }
+  .cat-add { display: none; margin-top: 4px; align-self: flex-start; background: none; border: 1px dashed rgba(255,255,255,0.5); color: #fff; border-radius: 6px; font-family: var(--font-main); font-size: 11px; padding: 4px 9px; cursor: pointer; }
+  .admin .cat-add { display: inline-block; }
+  .month-nav { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+  .month-nav button { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 26px; height: 26px; border-radius: 6px; font-size: 14px; line-height: 1; cursor: pointer; }
+  .month-nav button:disabled { opacity: 0.3; cursor: default; }
+  .month-nav span { font-size: 12px; font-weight: 600; }
 
   .actions { display: none; gap: 6px; }
   .actions.visible { display: flex; }
@@ -79,6 +88,8 @@
   table.grid td.full { background: #e9f6ec; color: var(--green); font-weight: 600; }
   table.grid td.part { color: var(--text); font-weight: 600; }
   table.grid td.zero { color: var(--text3); }
+  table.grid td.adv { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+  table.grid th.mois.adv { color: var(--blue); }
   table.grid tr.sum th, table.grid tr.sum td { background: var(--surface); font-weight: 700; color: var(--text); border-top: 1.5px solid var(--text3); border-bottom: none; }
 
   /* Saisie dépense en ligne */
@@ -89,6 +100,7 @@
   .dep-form .row { display: flex; gap: 6px; }
   .dep-form .row input[type=date] { flex: 1.3; }
   .dep-form .row input[type=number] { flex: 1; }
+  .dep-form select { font-family: var(--font-main); font-size: 15px; padding: 9px 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); outline: none; width: 100%; }
   .dep-form .row button { flex: 0 0 auto; padding: 0 14px; border-radius: 8px; border: none; background: var(--green); color: #fff; font-family: var(--font-main); font-size: 13.5px; font-weight: 600; cursor: pointer; }
   .dep-form .hint { font-size: 10.5px; color: var(--text2); }
   .dep-form .err { font-size: 11px; color: var(--red); display: none; }
@@ -116,6 +128,11 @@
   tr.drow td { font-size: 11.5px; color: var(--text2); background: #fbfaf8; }
   tr.drow td:first-child { padding-left: 22px; }
   .desig { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  td.ar, .ar { unicode-bidi: plaintext; }
+  .lot { font-size: 10.5px; color: var(--blue); }
+  .enc-preview { font-size: 11.5px; color: var(--blue); background: var(--blue-light); border-radius: 7px; padding: 7px 9px; display: none; }
+  .two { display: flex; gap: 8px; } .two .field { flex: 1; min-width: 0; }
+  .b-danger { background: #fdf3f2; border: 1px solid #f5c6c3; color: var(--red); }
 
   .settings { display: none; padding: 0.6rem 0.75rem; font-size: 11.5px; color: var(--text2); gap: 8px; align-items: center; flex-wrap: wrap; border-top: 1px solid var(--border); }
   .admin .settings { display: flex; }
@@ -157,13 +174,13 @@
       <span class="caisse-amount num" id="c-caisse">0 Dhs</span>
     </div>
     <div class="caisse-rule" id="c-date">—</div>
-    <div class="calc">
-      <div class="calc-row"><span>Total encaissé</span><span class="num" id="c-enc">0 Dhs</span></div>
-      <div class="calc-row minus"><span>- Femme de ménage</span><span class="num" id="c-menage">0 Dhs</span></div>
-      <div class="calc-row minus"><span>- Produits de ménage</span><span class="num" id="c-produit">0 Dhs</span></div>
-      <div class="calc-row minus"><span>- Électricité (escalier)</span><span class="num" id="c-elec">0 Dhs</span></div>
-      <div class="calc-row minus"><span>- Travaux</span><span class="num" id="c-travaux">0 Dhs</span></div>
+    <div class="month-nav">
+      <button type="button" id="m-prev" onclick="shiftMonth(-1)" aria-label="Mois précédent">‹</button>
+      <span id="m-label">—</span>
+      <button type="button" id="m-next" onclick="shiftMonth(1)" aria-label="Mois suivant">›</button>
     </div>
+    <div class="calc" id="calc"></div>
+    <button type="button" class="cat-add" onclick="openCat(null)">+ Ajouter une ligne de dépense</button>
   </section>
 
   <div class="actions" id="actions">
@@ -177,6 +194,11 @@
     <div class="card-head"><span class="card-title">Cotisations par mois (Dhs)</span><span class="card-meta" id="grid-meta"></span></div>
     <div class="scroll-hint">Glisse le tableau vers la gauche pour voir tous les appartements →</div>
     <div class="grid-wrap"><table class="grid" id="grid"></table></div>
+    <div class="legend">
+      <span><i class="sw" style="background:#e9f6ec;border:1px solid var(--green)"></i>Payé</span>
+      <span><i class="sw" style="background:var(--blue-light);border:1px solid var(--blue)"></i>Payé d'avance</span>
+      <span>· Non payé</span>
+    </div>
     <div class="settings">
       <label for="start-month">Premier mois :</label>
       <input type="month" id="start-month" onchange="changeStart(this.value)" style="font-family:var(--font-mono);font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text)">
@@ -194,6 +216,7 @@
         <option value="Changement ampoule"></option>
         <option value="Travaux"></option>
       </datalist>
+      <select id="dep-cat" aria-label="Ligne de dépense" onchange="depCatTouched=true"></select>
       <div class="row">
         <input type="date" id="dep-date" aria-label="Date">
         <input type="number" inputmode="numeric" id="dep-montant" placeholder="Montant" aria-label="Montant en Dhs">
@@ -228,10 +251,25 @@
     <h2>Nouvel encaissement</h2>
     <div class="field"><label for="enc-apt">Appartement</label><select id="enc-apt"></select></div>
     <div class="field"><label for="enc-montant">Montant (Dhs)</label><input type="number" inputmode="numeric" id="enc-montant" placeholder="100"></div>
-    <div class="field"><label for="enc-date">Date</label><input type="date" id="enc-date"></div>
+    <div class="field"><label for="enc-date">Date du paiement</label><input type="date" id="enc-date"></div>
+    <div class="two">
+      <div class="field"><label for="enc-mois">Mois payé (à partir de)</label><select id="enc-mois" onchange="encPreview()"></select></div>
+      <div class="field"><label for="enc-nb">Nombre de mois</label><select id="enc-nb" onchange="encNbTouched=true;encPreview()"></select></div>
+    </div>
+    <div class="enc-preview" id="enc-preview"></div>
     <div style="font-size:11px;color:var(--text2)">Pour corriger une erreur, mets <b>0</b> : la case de cet appartement pour ce mois se vide.</div>
     <div class="error-msg" id="enc-err">Indique un montant.</div>
     <div class="modal-btns"><button class="b-cancel" onclick="closeM('m-enc')">Annuler</button><button class="b-ok" onclick="saveEnc()">Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- Ligne de dépense (catégorie) -->
+<div class="modal-wrap" id="m-cat">
+  <div class="modal">
+    <h2 id="cat-title">Ligne de dépense</h2>
+    <div class="field"><label for="cat-label">Nom affiché dans la caisse (français ou arabe)</label><input type="text" id="cat-label" dir="auto" placeholder="ex : Travaux porte d'entrée" onkeydown="if(event.key==='Enter') saveCat()"></div>
+    <div class="error-msg" id="cat-err"></div>
+    <div class="modal-btns"><button class="b-danger" id="cat-del" onclick="delCat()">Supprimer</button><button class="b-cancel" onclick="closeM('m-cat')">Annuler</button><button class="b-ok" onclick="saveCat()">Enregistrer</button></div>
   </div>
 </div>
 
@@ -245,8 +283,16 @@ const CAT_GROUP   = { menage:"menage", produit:"produit", elec:"elec", ampoule:"
 const MOIS        = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const MOIS_COURT  = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Aoû","Sep","Oct","Nov","Déc"];
 
-let data = { startMonth: "2026-11", encaissements: [], depenses: [] };
+const DEFAULT_CATS = [
+  { id:"menage",  label:"Femme de ménage" },
+  { id:"produit", label:"Produits de ménage" },
+  { id:"elec",    label:"Électricité (escalier)" },
+  { id:"travaux", label:"Travaux" }
+];
+let data = { startMonth: "2026-11", encaissements: [], depenses: [], categories: DEFAULT_CATS.map(c => ({...c})) };
 let isAdmin = false;
+let selMonth = null;          // mois affiché dans le cadran vert (null = mois en cours)
+let depCatTouched = false, encNbTouched = false, editCatId = null;
 let docRef = null;
 
 // ── Firebase (même projet que l'outil cotisation porte) ──
@@ -273,12 +319,29 @@ function byDateDesc(a,b) { return (b.date||'').localeCompare(a.date||''); }
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function setSync(state, label) { const d=document.getElementById('sync-dot'); d.className='sync-dot '+state; d.title=label; }
 
-// Liste des mois affichés : du premier mois jusqu'au mois en cours (ou au dernier mois ayant un encaissement)
+const hasAr = s => /[\u0600-\u06FF]/.test(String(s||''));
+const curMonth = () => todayIso().slice(0,7);
+function mIdx(k) { const [y,m] = k.split('-').map(Number); return y*12 + m - 1; }
+function mKey(i) { return Math.floor(i/12) + '-' + String(i%12 + 1).padStart(2,'0'); }
+function addM(k, n) { return mKey(mIdx(k) + n); }
+// Mois couvert par un versement (un paiement d'avance couvre un mois futur)
+function moisOf(e) { return e.mois || e.date.slice(0,7); }
+// Ligne de dépense (catégorie) d'une dépense, avec repli pour les anciennes données
+function catOf(d) {
+  if (data.categories.some(c => c.id === d.cat)) return d.cat;
+  const g = CAT_GROUP[d.cat];
+  if (g && data.categories.some(c => c.id === g)) return g;
+  const t = data.categories.find(c => c.id === 'travaux');
+  return t ? t.id : (data.categories[0] || {}).id;
+}
+function catLabel(id) { const c = data.categories.find(x => x.id === id); return c ? c.label : ''; }
+
+// Liste des mois affichés : du premier mois jusqu'au mois en cours (ou au dernier mois payé d'avance)
 function monthKeys() {
   const [sy, sm] = data.startMonth.split('-').map(Number);
   const now = new Date();
   let end = now.getFullYear()*12 + now.getMonth();
-  data.encaissements.forEach(e => { const [y,m] = e.date.split('-').map(Number); end = Math.max(end, y*12 + m - 1); });
+  data.encaissements.forEach(e => { end = Math.max(end, mIdx(moisOf(e))); });
   const keys = [];
   for (let i = sy*12 + sm - 1; i <= end; i++) keys.push(Math.floor(i/12) + '-' + String(i%12 + 1).padStart(2,'0'));
   return keys;
@@ -289,18 +352,36 @@ function monthsDue() {
   return Math.max(0, (now.getFullYear()-sy)*12 + (now.getMonth()+1 - sm) + 1);
 }
 function mLabel(k, short) { const [y,m] = k.split('-').map(Number); return short ? MOIS_COURT[m-1] + ' ' + String(y).slice(2) : MOIS[m-1] + ' ' + y; }
-function cellAmount(apt, mk) { return sum(data.encaissements.filter(e => Number(e.apt) === apt && e.date.slice(0,7) === mk)); }
-function aptTotal(apt) { return sum(data.encaissements.filter(e => Number(e.apt) === apt && e.date.slice(0,7) >= data.startMonth)); }
-function monthTotal(mk) { return sum(data.encaissements.filter(e => e.date.slice(0,7) === mk)); }
+function cellAmount(apt, mk) { return sum(data.encaissements.filter(e => Number(e.apt) === apt && moisOf(e) === mk)); }
+function aptTotal(apt) { return sum(data.encaissements.filter(e => Number(e.apt) === apt && moisOf(e) >= data.startMonth)); }
+function monthTotal(mk) { return sum(data.encaissements.filter(e => moisOf(e) === mk)); }
 function solde(apt) { return aptTotal(apt) - monthsDue() * COTISATION; }
 function soldeTxt(s) { return s > 0 ? '+' + nb(s) : s < 0 ? '-' + nb(-s) : '0'; }
 
-function totals() {
-  const enc = sum(data.encaissements);
-  const t = { enc, menage:0, produit:0, elec:0, travaux:0 };
-  data.depenses.forEach(d => { const g = CAT_GROUP[d.cat] || 'travaux'; t[g] += (Number(d.montant)||0); });
-  t.caisse = enc - t.menage - t.produit - t.elec - t.travaux;
-  return t;
+// Cadran vert : mouvements du mois choisi (argent reçu ce mois-là, dépenses de ce mois-là)
+// + report de la caisse à la fin du mois précédent. Le solde de la caisse n'est jamais perdu.
+function viewMonth() { return selMonth || curMonth(); }
+function firstDataMonth() {
+  let k = data.startMonth;
+  data.encaissements.forEach(e => { if (e.date.slice(0,7) < k) k = e.date.slice(0,7); });
+  data.depenses.forEach(d => { if (d.date.slice(0,7) < k) k = d.date.slice(0,7); });
+  return k;
+}
+function totals(mk) {
+  mk = mk || viewMonth();
+  const before = sum(data.encaissements.filter(e => e.date.slice(0,7) < mk)) - sum(data.depenses.filter(d => d.date.slice(0,7) < mk));
+  const enc = sum(data.encaissements.filter(e => e.date.slice(0,7) === mk));
+  const lines = data.categories.map(c => ({ id: c.id, label: c.label, montant: 0 }));
+  data.depenses.filter(d => d.date.slice(0,7) === mk).forEach(d => {
+    const l = lines.find(x => x.id === catOf(d)); if (l) l.montant += (Number(d.montant)||0);
+  });
+  const dep = lines.reduce((a, l) => a + l.montant, 0);
+  return { mk, report: before, enc, lines, dep, caisse: before + enc - dep };
+}
+function shiftMonth(n) {
+  const k = addM(viewMonth(), n);
+  if (k < firstDataMonth() || k > curMonth()) return;
+  selMonth = (k === curMonth()) ? null : k; render();
 }
 const CHEVRON = '<span class="arrow"><svg viewBox="0 0 8 8" fill="none"><path d="M3 1.5L5.5 4L3 6.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
 let openMonths = null;
@@ -310,6 +391,27 @@ function encGroups() {
   data.encaissements.forEach(e => { const mk = e.date.slice(0,7); (map[mk] = map[mk] || []).push(e); });
   return Object.keys(map).sort().reverse().map(mk => ({ mk, items: map[mk].sort((a,b) => byDateDesc(a,b) || a.apt - b.apt), total: sum(map[mk]) }));
 }
+// Regroupe les versements d'un même paiement (plusieurs mois payés d'un coup)
+function lots(items) {
+  const map = new Map();
+  items.forEach(e => { const k = e.lot || e.id; if (!map.has(k)) map.set(k, []); map.get(k).push(e); });
+  return [...map.entries()].map(([key, es]) => {
+    es.sort((a,b) => moisOf(a).localeCompare(moisOf(b)));
+    const first = moisOf(es[0]), last = moisOf(es[es.length-1]);
+    let desc = '';
+    if (es.length > 1) desc = es.length + ' mois : ' + mLabel(first, true) + ' → ' + mLabel(last, true);
+    else if (first !== es[0].date.slice(0,7)) desc = 'Mois payé : ' + mLabel(first, true);
+    return { key, apt: es[0].apt, date: es[0].date, montant: sum(es), desc };
+  });
+}
+function delLot(key) {
+  if (!isAdmin) return;
+  const es = data.encaissements.filter(e => (e.lot || e.id) === key);
+  if (!es.length) return;
+  if (!confirm('Supprimer ce versement (Apt ' + es[0].apt + ', ' + fmt(sum(es)) + (es.length>1 ? ', ' + es.length + ' mois' : '') + ') ?')) return;
+  data.encaissements = data.encaissements.filter(e => (e.lot || e.id) !== key);
+  save();
+}
 function toggleEncMonth(mk) { openEncMonths.has(mk) ? openEncMonths.delete(mk) : openEncMonths.add(mk); render(); }
 function depGroups() {
   const map = {};
@@ -317,7 +419,7 @@ function depGroups() {
   return Object.keys(map).sort().reverse().map(mk => ({ mk, items: map[mk].sort(byDateDesc), total: sum(map[mk]) }));
 }
 function toggleMonth(mk) { openMonths.has(mk) ? openMonths.delete(mk) : openMonths.add(mk); render(); }
-function depLabel(d) { return d.designation || CAT_LABEL[d.cat] || ''; }
+function depLabel(d) { return d.designation || catLabel(catOf(d)) || CAT_LABEL[d.cat] || ''; }
 // Range la dépense dans Femme de ménage / Produits de ménage / Électricité / Travaux d'après sa désignation
 function guessCat(txt) {
   const t = txt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -326,6 +428,17 @@ function guessCat(txt) {
   if (t.includes('electricite') || t.includes('facture lydec') || t.includes('lydec') || t.includes('compteur')) return 'elec';
   return 'travaux';
 }
+// Remplit la liste des lignes de dépense du formulaire
+function fillDepCats() {
+  const sel = document.getElementById('dep-cat'); const cur = sel.value;
+  sel.innerHTML = data.categories.map(c => `<option value="${c.id}">${esc(c.label)}</option>`).join('');
+  if (data.categories.some(c => c.id === cur)) sel.value = cur;
+}
+document.getElementById('dep-desig').addEventListener('input', e => {
+  if (depCatTouched) return;
+  const g = guessCat(e.target.value);
+  if (data.categories.some(c => c.id === g)) document.getElementById('dep-cat').value = g;
+});
 
 // ── Rendu ──
 function render() {
@@ -334,13 +447,19 @@ function render() {
   document.getElementById('start-month').value = data.startMonth;
 
   const t = totals();
+  const isCur = t.mk === curMonth();
   document.getElementById('c-caisse').textContent  = fmt(t.caisse);
-  document.getElementById('c-enc').textContent     = fmt(t.enc);
-  document.getElementById('c-menage').textContent  = fmt(t.menage);
-  document.getElementById('c-produit').textContent = fmt(t.produit);
-  document.getElementById('c-elec').textContent    = fmt(t.elec);
-  document.getElementById('c-travaux').textContent = fmt(t.travaux);
-  document.getElementById('c-date').textContent    = 'Situation au ' + frDate(todayIso());
+  document.getElementById('c-date').textContent    = isCur ? 'Situation au ' + frDate(todayIso()) : 'Situation fin ' + mLabel(t.mk).toLowerCase();
+  document.getElementById('m-label').textContent   = mLabel(t.mk);
+  document.getElementById('m-prev').disabled = addM(t.mk,-1) < firstDataMonth();
+  document.getElementById('m-next').disabled = isCur;
+  const moisNom = mLabel(t.mk).split(' ')[0].toLowerCase();
+  let c = '';
+  if (t.report !== 0 || t.mk > firstDataMonth()) c += `<div class="calc-row report"><span>Report fin ${mLabel(addM(t.mk,-1)).toLowerCase()}</span><span class="num">${fmt(t.report)}</span></div>`;
+  c += `<div class="calc-row"><span>Encaissé en ${moisNom}</span><span class="num">${fmt(t.enc)}</span></div>`;
+  c += t.lines.map(l => `<div class="calc-row minus cat-line"><span class="lbl" dir="auto" onclick="openCat('${l.id}')">- ${esc(l.label)}</span><span class="num">${fmt(l.montant)}</span></div>`).join('');
+  document.getElementById('calc').innerHTML = c;
+  fillDepCats();
 
   renderGrid();
 
@@ -355,7 +474,7 @@ function render() {
       groups.map(g => {
         const open = openMonths.has(g.mk);
         let r = `<tr class="mrow${open?' open':''}" onclick="toggleMonth('${g.mk}')"><td>${CHEVRON} ${mLabel(g.mk)}</td><td>Dépenses du mois de ${mLabel(g.mk).split(' ')[0].toLowerCase()}</td><td class="r num">${fmt(g.total)}</td><td></td></tr>`;
-        if (open) r += g.items.map(d => `<tr class="drow"><td class="num">${frDate(d.date)}</td><td>${esc(depLabel(d))}</td><td class="r num">${fmt(d.montant)}</td><td class="r"><button class="del" aria-label="Supprimer" onclick="event.stopPropagation();delItem('depenses','${d.id}')">×</button></td></tr>`).join('');
+        if (open) r += g.items.map(d => `<tr class="drow"><td class="num">${frDate(d.date)}</td><td class="ar" dir="auto">${esc(depLabel(d))}</td><td class="r num">${fmt(d.montant)}</td><td class="r"><button class="del" aria-label="Supprimer" onclick="event.stopPropagation();delItem('depenses','${d.id}')">×</button></td></tr>`).join('');
         return r;
       }).join('') +
       '</tbody></table>';
@@ -369,7 +488,7 @@ function render() {
       encGroups().map(g => {
         const open = openEncMonths.has(g.mk);
         let r = `<tr class="mrow${open?' open':''}" onclick="toggleEncMonth('${g.mk}')"><td>${CHEVRON} ${mLabel(g.mk)}</td><td>${g.items.length} versement${g.items.length>1?'s':''}</td><td class="r num">${fmt(g.total)}</td><td></td></tr>`;
-        if (open) r += g.items.map(e => `<tr class="drow"><td class="num">${frDate(e.date)}</td><td class="num">Apt ${e.apt}</td><td class="r num">${fmt(e.montant)}</td><td class="r"><button class="del" aria-label="Supprimer" onclick="event.stopPropagation();delItem('encaissements','${e.id}')">×</button></td></tr>`).join('');
+        if (open) r += lots(g.items).map(L => `<tr class="drow"><td class="num">${frDate(L.date)}</td><td class="num">Apt ${L.apt}${L.desc ? `<div class="lot">${L.desc}</div>` : ''}</td><td class="r num">${fmt(L.montant)}</td><td class="r"><button class="del" aria-label="Supprimer" onclick="event.stopPropagation();delLot('${L.key}')">×</button></td></tr>`).join('');
         return r;
       }).join('') +
       '</tbody></table>';
@@ -382,11 +501,13 @@ function renderGrid() {
 
   let h = '<colgroup><col class="c-mois">' + APTS.map(() => '<col>').join('') + '<col class="c-tot"></colgroup>';
   h += '<thead><tr><th class="mois">Mois</th>' + APTS.map(a => `<th>A${a}</th>`).join('') + '<th class="tot">Total</th></tr></thead><tbody>';
+  const cm = curMonth();
   keys.forEach(k => {
-    h += `<tr><th class="mois">${mLabel(k, true)}</th>`;
+    const fut = k > cm;
+    h += `<tr><th class="mois${fut?' adv':''}">${mLabel(k, true)}</th>`;
     APTS.forEach(a => {
       const v = cellAmount(a, k);
-      const cls = v >= COTISATION ? 'full' : v > 0 ? 'part' : 'zero';
+      const cls = v > 0 && fut ? 'adv' : v >= COTISATION ? 'full' : v > 0 ? 'part' : 'zero';
       h += `<td class="cell ${cls}" onclick="cellTap(${a},'${k}')">${v ? nb(v) : '·'}</td>`;
     });
     h += `<td class="tot">${nb(monthTotal(k))}</td></tr>`;
@@ -398,7 +519,10 @@ function renderGrid() {
 // ── Stockage ──
 function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e) {} }
 function loadLocal() { try { const r = localStorage.getItem(LS_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; } }
-function normalize(d) { return { startMonth: d.startMonth || "2026-11", encaissements: d.encaissements || [], depenses: d.depenses || [] }; }
+function normalize(d) {
+  const cats = Array.isArray(d.categories) && d.categories.length ? d.categories : DEFAULT_CATS.map(c => ({...c}));
+  return { startMonth: d.startMonth || "2026-11", encaissements: d.encaissements || [], depenses: d.depenses || [], categories: cats };
+}
 
 async function load() {
   const c = loadLocal();
@@ -425,15 +549,57 @@ function openM(id) { document.getElementById(id).classList.add('open'); }
 function closeM(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-wrap').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
 
+// Premier mois non payé (à partir du premier mois) pour un appartement
+function firstUnpaid(apt) {
+  let k = data.startMonth;
+  for (let i = 0; i < 60; i++) { if (cellAmount(apt, k) < COTISATION) return k; k = addM(k, 1); }
+  return curMonth();
+}
+function fillEncMonths(selected) {
+  const sel = document.getElementById('enc-mois');
+  const from = data.startMonth < curMonth() ? data.startMonth : curMonth();
+  const to = addM(curMonth(), 12);
+  let h = '';
+  for (let k = from; k <= to; k = addM(k, 1)) h += `<option value="${k}">${mLabel(k)}</option>`;
+  sel.innerHTML = h; sel.value = selected;
+  const nb = document.getElementById('enc-nb');
+  if (!nb.options.length) nb.innerHTML = Array.from({length:12}, (_,i) => `<option value="${i+1}">${i+1} mois</option>`).join('');
+}
 function openEnc(apt, mk) {
   const sel = document.getElementById('enc-apt');
   if (!sel.options.length) sel.innerHTML = APTS.map(a => `<option value="${a}">Apt ${a}</option>`).join('');
   sel.value = apt || 1;
-  const today = todayIso();
-  document.getElementById('enc-date').value = (mk && today.slice(0,7) !== mk) ? mk + '-01' : today;
+  sel.onchange = () => { document.getElementById('enc-mois').value = firstUnpaid(Number(sel.value)); encPreview(); };
+  document.getElementById('enc-date').value = todayIso();
+  fillEncMonths(mk || firstUnpaid(Number(sel.value)));
+  document.getElementById('enc-nb').value = '1'; encNbTouched = false;
   document.getElementById('enc-montant').value = '';
   document.getElementById('enc-err').style.display = 'none';
+  encPreview();
   openM('m-enc');
+}
+// Montant tapé = plusieurs fois 100 → propose automatiquement le nombre de mois
+document.getElementById('enc-montant').addEventListener('input', () => {
+  const v = Number(document.getElementById('enc-montant').value);
+  if (!encNbTouched && v >= 2*COTISATION && v % COTISATION === 0 && v/COTISATION <= 12) document.getElementById('enc-nb').value = String(v/COTISATION);
+  else if (!encNbTouched) document.getElementById('enc-nb').value = '1';
+  encPreview();
+});
+// Répartition : 100 Dhs par mois, le dernier mois reçoit le reste
+function splitEnc(montant, n) {
+  if (n <= 1) return [montant];
+  if (montant <= COTISATION*(n-1)) { const p = Math.round(montant/n*100)/100; return Array.from({length:n}, (_,i) => i<n-1 ? p : Math.round((montant - p*(n-1))*100)/100); }
+  return Array.from({length:n}, (_,i) => i<n-1 ? COTISATION : montant - COTISATION*(n-1));
+}
+function encPreview() {
+  const box = document.getElementById('enc-preview');
+  const montant = Number(document.getElementById('enc-montant').value);
+  const n = Number(document.getElementById('enc-nb').value) || 1;
+  const k0 = document.getElementById('enc-mois').value;
+  if (!montant || !k0) { box.style.display = 'none'; return; }
+  const parts = splitEnc(montant, n);
+  box.innerHTML = parts.map((p,i) => { const k = addM(k0,i); return mLabel(k) + ' : ' + fmt(p) + (k > curMonth() ? ' <b>(avance)</b>' : ''); }).join('<br>');
+  box.style.display = 'block';
 }
 function cellTap(apt, mk) { if (isAdmin) openEnc(apt, mk); }
 function saveEnc() {
@@ -441,13 +607,15 @@ function saveEnc() {
   const montant = Number(raw);
   const apt = Number(document.getElementById('enc-apt').value);
   const date = document.getElementById('enc-date').value || todayIso();
+  const k0 = document.getElementById('enc-mois').value || date.slice(0,7);
+  const n = Number(document.getElementById('enc-nb').value) || 1;
   if (raw === '' || isNaN(montant) || montant < 0) { document.getElementById('enc-err').style.display = 'block'; return; }
   if (montant === 0) {
     // 0 = vider la case : supprime les versements de cet appartement pour ce mois
-    const mk = date.slice(0,7);
-    data.encaissements = data.encaissements.filter(e => !(Number(e.apt) === apt && e.date.slice(0,7) === mk));
+    data.encaissements = data.encaissements.filter(e => !(Number(e.apt) === apt && moisOf(e) === k0));
   } else {
-    data.encaissements.push({ id: uid(), apt, montant, date });
+    const lot = uid();
+    splitEnc(montant, n).forEach((p, i) => data.encaissements.push({ id: uid(), lot, apt, montant: p, date, mois: addM(k0, i) }));
   }
   closeM('m-enc'); save();
 }
@@ -468,8 +636,9 @@ function saveDep() {
   const err = document.getElementById('dep-err');
   if (!designation) { err.textContent = 'Indique la désignation de la dépense.'; err.style.display = 'block'; return; }
   if (!montant || montant <= 0) { err.textContent = 'Indique le montant.'; err.style.display = 'block'; return; }
-  data.depenses.push({ id: uid(), cat: guessCat(designation), designation, montant, date: document.getElementById('dep-date').value || todayIso() });
-  resetDepForm(); save();
+  const cat = document.getElementById('dep-cat').value || catOf({ cat: guessCat(designation) });
+  data.depenses.push({ id: uid(), cat, designation, montant, date: document.getElementById('dep-date').value || todayIso() });
+  resetDepForm(); depCatTouched = false; save();
 }
 document.getElementById('dep-montant').addEventListener('keydown', e => { if (e.key === 'Enter') saveDep(); });
 
@@ -480,6 +649,33 @@ function delItem(list, id) {
   if (!confirm('Supprimer cette ligne (' + frDate(it.date) + ', ' + fmt(it.montant) + ') ?')) return;
   data[list] = data[list].filter(x => x.id !== id);
   save();
+}
+// ── Lignes de dépense du cadran vert (titres modifiables) ──
+function openCat(id) {
+  if (!isAdmin) return;
+  editCatId = id;
+  const c = data.categories.find(x => x.id === id);
+  document.getElementById('cat-title').textContent = c ? 'Modifier la ligne' : 'Nouvelle ligne de dépense';
+  document.getElementById('cat-label').value = c ? c.label : '';
+  document.getElementById('cat-err').style.display = 'none';
+  document.getElementById('cat-del').style.display = c ? '' : 'none';
+  openM('m-cat');
+  setTimeout(() => document.getElementById('cat-label').focus(), 100);
+}
+function catErr(t) { const e = document.getElementById('cat-err'); e.textContent = t; e.style.display = 'block'; }
+function saveCat() {
+  const label = document.getElementById('cat-label').value.trim();
+  if (!label) return catErr('Indique le nom de la ligne.');
+  if (editCatId) data.categories = data.categories.map(c => c.id === editCatId ? { ...c, label } : c);
+  else data.categories = [...data.categories, { id: 'c' + uid(), label }];
+  closeM('m-cat'); save();
+}
+function delCat() {
+  const n = data.depenses.filter(d => catOf(d) === editCatId).length;
+  if (n) return catErr('Impossible : ' + n + ' dépense' + (n>1?'s utilisent':' utilise') + ' cette ligne. Renomme-la plutôt.');
+  if (data.categories.length <= 1) return catErr('Il faut garder au moins une ligne.');
+  data.categories = data.categories.filter(c => c.id !== editCatId);
+  closeM('m-cat'); save();
 }
 function changeStart(v) { if (!isAdmin || !v) return; data.startMonth = v; save(); }
 
@@ -508,26 +704,59 @@ function confirmLogin() {
 }
 
 // ── PDF (une page tant que les données tiennent) ──
+// L'arabe est dessiné par le navigateur (lettres liées, sens droite-gauche corrects) puis posé dans le PDF en image nette.
+function textImg(txt, pt, rgb, bold) {
+  const scale = 6, px = pt * scale;
+  const c = document.createElement('canvas'), x = c.getContext('2d');
+  const font = (bold ? '600 ' : '400 ') + px + 'px Helvetica, Arial, "Geeza Pro", "Noto Naskh Arabic", "Segoe UI", sans-serif';
+  x.font = font;
+  const w = Math.ceil(x.measureText(txt).width) + 4, h = Math.ceil(px * 1.45);
+  c.width = w; c.height = h;
+  x.font = font; x.fillStyle = 'rgb(' + rgb.join(',') + ')'; x.textBaseline = 'middle';
+  const rtl = /^[^A-Za-zÀ-ɏ]*[؀-ۿ]/.test(txt);
+  x.direction = rtl ? 'rtl' : 'ltr'; x.textAlign = rtl ? 'right' : 'left';
+  x.fillText(txt, rtl ? w - 2 : 2, h / 2);
+  const mm = 25.4 / 72 / scale;               // 1 px du canvas en mm
+  return { url: c.toDataURL('image/png'), w: w * mm, h: h * mm };
+}
+// Écrit un texte : police normale s'il n'y a pas d'arabe, sinon image (y = ligne de base, comme doc.text)
+function pdfText(doc, txt, x, y, opt) {
+  opt = opt || {};
+  if (!hasAr(txt)) { doc.text(txt, x, y, opt.align ? { align: opt.align } : undefined); return; }
+  const pt = doc.getFontSize(), col = doc.getTextColor();
+  const rgb = /^#/.test(col) ? [1,3,5].map(i => parseInt(col.substr(i,2),16)) : [0,0,0];
+  const im = textImg(txt, pt, rgb, doc.getFont().fontStyle === 'bold');
+  let w = im.w, h = im.h;
+  if (opt.maxW && w > opt.maxW) { h = h * opt.maxW / w; w = opt.maxW; }
+  const xx = opt.align === 'right' ? x - w : x;
+  doc.addImage(im.url, 'PNG', xx, y - h * 0.62, w, h);
+}
+
 function makePdf() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const W = 210, M = 12;
-  const green = [45,106,79], grey = [107,103,96], ink = [26,25,22];
+  const green = [45,106,79], grey = [107,103,96], ink = [26,25,22], blue = [26,82,118];
   const t = totals();
+  const isCur = t.mk === curMonth();
 
   doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(...ink);
   doc.text('Caisse - Immeuble 19', M, 16);
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...grey);
-  doc.text('Cotisation : 100 Dhs / mois / appartement   |   Situation au ' + frDate(todayIso()), M, 21);
+  doc.text('Cotisation : 100 Dhs / mois / appartement   |   ' + mLabel(t.mk) + '   |   ' + (isCur ? 'Situation au ' + frDate(todayIso()) : 'Situation fin ' + mLabel(t.mk).toLowerCase()), M, 21);
 
-  // Bloc caisse (compact)
-  const bx = M, by = 25, bw = W-2*M, bh = 34;
+  // Bloc caisse : mouvements du mois + report
+  const moisNom = mLabel(t.mk).split(' ')[0].toLowerCase();
+  const left = [];
+  if (t.report !== 0 || t.mk > firstDataMonth()) left.push(['Report fin ' + mLabel(addM(t.mk,-1)).toLowerCase(), fmt(t.report)]);
+  left.push(['Encaissé en ' + moisNom, fmt(t.enc)]);
+  t.lines.forEach(l => left.push(['- ' + l.label, fmt(l.montant)]));
+  const bx = M, by = 25, bw = W-2*M, bh = Math.max(34, 8 + left.length * 5.2 + 2);
   doc.setFillColor(...green); doc.roundedRect(bx, by, bw, bh, 2.5, 2.5, 'F');
   doc.setTextColor(255,255,255); doc.setFontSize(9);
-  const left = [['Total encaissé', fmt(t.enc)], ['- Femme de ménage', fmt(t.menage)], ['- Produits de ménage', fmt(t.produit)], ['- Électricité (escalier)', fmt(t.elec)], ['- Travaux', fmt(t.travaux)]];
   let y = by + 7;
-  left.forEach(r => { doc.text(r[0], bx+5, y); doc.text(r[1], bx+75, y, { align:'right' }); y += 5.2; });
-  doc.setDrawColor(255,255,255); doc.setLineWidth(0.2); doc.line(bx+90, by+6, bx+90, by+bh-6);
+  left.forEach(r => { pdfText(doc, r[0], bx+5, y, { maxW: 58 }); doc.text(r[1], bx+90, y, { align:'right' }); y += 5.2; });
+  doc.setDrawColor(255,255,255); doc.setLineWidth(0.2); doc.line(bx+100, by+6, bx+100, by+bh-6);
   doc.setFontSize(9); doc.text('CAISSE', bx+bw-5, by+13, { align:'right' });
   doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.text(fmt(t.caisse), bx+bw-5, by+24, { align:'right' });
 
@@ -537,6 +766,7 @@ function makePdf() {
   // Grille mois x appartements
   const keys = monthKeys();
   const md = monthsDue();
+  const cm = curMonth();
   sec('Cotisations par mois (Dhs)', by + bh + 8);
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...grey);
   doc.text(md + ' mois dus = ' + fmt(md*COTISATION) + ' par appartement', W-M, by + bh + 8, { align:'right' });
@@ -553,19 +783,26 @@ function makePdf() {
     didParseCell: (h) => {
       if (h.section !== 'body') return;
       const r = h.row.index, c = h.column.index;
-      if (r >= nBody) { h.cell.styles.fontStyle = 'bold'; }
+      const fut = keys[r] > cm;
+      if (c === 0 && fut) h.cell.styles.textColor = blue;
       if (r < nBody && c >= 1 && c <= 17) {
         const v = cellAmount(APTS[c-1], keys[r]);
-        if (v >= COTISATION) { h.cell.styles.fillColor = [233,246,236]; h.cell.styles.textColor = green; }
+        if (v > 0 && fut) { h.cell.styles.fillColor = [214,234,248]; h.cell.styles.textColor = blue; h.cell.styles.fontStyle = 'bold'; }
+        else if (v >= COTISATION) { h.cell.styles.fillColor = [233,246,236]; h.cell.styles.textColor = green; }
         else if (v > 0) { h.cell.styles.fontStyle = 'bold'; }
         else h.cell.styles.textColor = [168,164,158];
       }
     }
   });
   let yy = doc.lastAutoTable.finalY + 4;
+  // Légende
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...grey);
+  doc.setFillColor(233,246,236); doc.rect(M, yy-2.3, 2.6, 2.6, 'F'); doc.text('Payé', M+4, yy);
+  doc.setFillColor(214,234,248); doc.rect(M+16, yy-2.3, 2.6, 2.6, 'F'); doc.text("Payé d'avance", M+20, yy);
+  doc.text('-  Non payé', M+44, yy);
 
   // Dépenses
-  yy += 8;
+  yy += 10;
   if (yy > 265) { doc.addPage(); yy = 18; }
   sec('Dépenses', yy);
   const groups = depGroups();
@@ -588,9 +825,17 @@ function makePdf() {
       if (h.section==='body' && pBody.length) {
         if (kinds[h.row.index].startsWith('month')) h.cell.styles.fontStyle = 'bold';
         else { h.cell.styles.textColor = grey; h.cell.styles.fontSize = 8; h.cell.styles.fillColor = [251,250,248]; }
+        // Texte arabe : la cellule reste vide ici, il est dessiné en image juste après
+        if (hasAr(h.cell.raw)) { h.cell.arText = String(h.cell.raw); h.cell.text = [' ']; }
       }
     },
     didDrawCell: (h) => {
+      if (h.section === 'body' && h.cell.arText) {
+        const fs = h.cell.styles.fontSize, prev = doc.getFontSize();
+        doc.setFontSize(fs); doc.setTextColor(...(kinds[h.row.index] === 'detail' ? grey : ink));
+        pdfText(doc, h.cell.arText, h.cell.x + 2, h.cell.y + h.cell.height/2 + fs*0.13, { maxW: h.cell.width - 4 });
+        doc.setFontSize(prev);
+      }
       if (h.section !== 'body' || h.column.index !== 0 || !pBody.length) return;
       const k = kinds[h.row.index]; if (!k.startsWith('month')) return;
       const x = h.cell.x + 2.5, cy = h.cell.y + h.cell.height/2;
