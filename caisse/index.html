@@ -442,8 +442,6 @@ function depGroups() {
 function toggleMonth(mk) { openMonths.has(mk) ? openMonths.delete(mk) : openMonths.add(mk); render(); }
 // Titre affiché dans la liste des dépenses : le titre de sa ligne du cadran vert
 function depTitle(d) { return catLabel(catOf(d)) || depLabel(d); }
-// Précision en plus, seulement si elle est en arabe et différente du titre
-function depNote(d) { const t = depTitle(d), x = (d.designation || '').trim(); return x && hasAr(x) && x !== t ? x : ''; }
 function depLabel(d) { return d.designation || catLabel(catOf(d)) || CAT_LABEL[d.cat] || ''; }
 // Range la dépense dans Femme de ménage / Produits de ménage / Électricité / Travaux d'après sa désignation
 function guessCat(txt) {
@@ -514,7 +512,7 @@ function render() {
       groups.map(g => {
         const open = openMonths.has(g.mk);
         let r = `<tr class="mrow${open?' open':''}" onclick="toggleMonth('${g.mk}')"><td>${CHEVRON} ${mLabelAr(g.mk)}</td><td>مصاريف شهر ${mAr(g.mk)}</td><td class="r num">${fmtAr(g.total)}</td><td></td></tr>`;
-        if (open) r += g.items.map(d => `<tr class="drow"><td class="num" dir="ltr" style="text-align:right">${frDate(d.date)}</td><td class="ar" dir="auto">${esc(depTitle(d))}${depNote(d) ? `<div class="desig" dir="rtl">${esc(depNote(d))}</div>` : ''}</td><td class="r num">${fmtAr(d.montant)}</td><td class="r"><button class="del" aria-label="Supprimer" onclick="event.stopPropagation();delItem('depenses','${d.id}')">×</button></td></tr>`).join('');
+        if (open) r += g.items.map(d => `<tr class="drow"><td class="num" dir="ltr" style="text-align:right">${frDate(d.date)}</td><td class="ar" dir="auto">${esc(depTitle(d))}</td><td class="r num">${fmtAr(d.montant)}</td><td class="r"><button class="del" aria-label="Supprimer" onclick="event.stopPropagation();delItem('depenses','${d.id}')">×</button></td></tr>`).join('');
         return r;
       }).join('') +
       '</tbody></table>';
@@ -868,7 +866,7 @@ function makePdf() {
   groups.forEach((g, i) => {
     const open = openMonths && openMonths.has(g.mk);
     pBody.push([fmtAr(g.total), 'مصاريف شهر ' + mAr(g.mk), mLabelAr(g.mk)]); kinds.push(open ? 'month-open' : 'month');
-    if (open) g.items.forEach(d => { pBody.push([fmtAr(d.montant), depTitle(d) + (depNote(d) ? ' (' + depNote(d) + ')' : ''), frDate(d.date) + '     ']); kinds.push('detail'); });
+    if (open) g.items.forEach(d => { pBody.push([fmtAr(d.montant), depTitle(d), frDate(d.date) + '     ']); kinds.push('detail'); });
   });
   doc.autoTable({
     startY: yy + 2, margin:{ left:M, right:M },
@@ -913,7 +911,7 @@ function makePdf() {
   const n = doc.getNumberOfPages();
   for (let i=1; i<=n; i++) {
     doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...grey);
-    doc.text('Immeuble 19 - Caisse de l\'immeuble (v6)' + (n>1 ? '   |   Page ' + i + '/' + n : ''), W/2, 290, { align:'center' });
+    doc.text('Immeuble 19 - Caisse de l\'immeuble (v7)' + (n>1 ? '   |   Page ' + i + '/' + n : ''), W/2, 290, { align:'center' });
   }
   const d = todayIso().split('-');
   doc.save('Caisse_Immeuble19_' + d[2] + '-' + d[1] + '-' + d[0] + '.pdf');
