@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Caisse — Immeuble 19</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -17,10 +17,10 @@
     --red: #922b21; --red-light: #fdecea;
     --amber: #9a6700; --amber-light: #fff4d6;
     --blue: #1a5276; --blue-light: #d6eaf8;
-    --font-main: 'Sora', system-ui, sans-serif; --font-mono: 'DM Mono', ui-monospace, monospace;
+    --font-main: 'Sora', system-ui, sans-serif; --font-mono: 'Inter', system-ui, sans-serif;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font-main); background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 40px; }
+  body { font-variant-numeric: tabular-nums; font-family: var(--font-main); background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 40px; }
   .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
   .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.6rem 0.75rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; gap: 8px; }
@@ -174,7 +174,7 @@
       <span class="caisse-amount num" id="c-caisse">0 Dhs</span>
     </div>
     <div class="caisse-rule" id="c-date">—</div>
-    <div class="prev-box"><span class="pl" id="c-prev-l">Solde du mois précédent</span><span class="pa num" id="c-prev">0 Dhs</span></div>
+    <div class="prev-box"><span class="pl" id="c-prev-l">Solde des mois précédents</span><span class="pa num" id="c-prev">0 Dhs</span></div>
     <div class="month-nav">
       <button type="button" id="m-prev" onclick="shiftMonth(-1)" aria-label="Mois précédent">‹</button>
       <span id="m-label">—</span>
@@ -455,7 +455,6 @@ function render() {
   document.getElementById('m-next').disabled = isCur;
   const moisNom = mLabel(t.mk).split(' ')[0].toLowerCase();
   let c = '';
-  document.getElementById('c-prev-l').textContent = 'Solde du mois précédent (fin ' + mLabel(addM(t.mk,-1)).toLowerCase() + ')';
   document.getElementById('c-prev').textContent = fmt(t.report);
   c += `<div class="calc-row"><span>Encaissé en ${moisNom}</span><span class="num">${fmt(t.enc)}</span></div>`;
   c += t.lines.map(l => `<div class="calc-row minus cat-line"><span class="lbl" dir="auto" onclick="openCat('${l.id}')">- ${esc(l.label)}</span><span class="num">${fmt(l.montant)}</span></div>`).join('');
@@ -757,10 +756,10 @@ function makePdf() {
   doc.setDrawColor(255,255,255); doc.setLineWidth(0.2); doc.line(bx+100, by+6, bx+100, by+bh-6);
   doc.setFontSize(9); doc.text('CAISSE', bx+bw-5, by+13, { align:'right' });
   doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.text(fmt(t.caisse), bx+bw-5, by+24, { align:'right' });
-  // Petit encadré : solde du mois précédent
+  // Petit encadré : solde cumulé des mois précédents
   doc.setFillColor(78,135,109); doc.roundedRect(bx+106, by+bh-12, bw-111, 8, 1.5, 1.5, 'F');
   doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(255,255,255);
-  doc.text('Solde du mois précédent (fin ' + mLabel(addM(t.mk,-1)).toLowerCase() + ')', bx+109, by+bh-7);
+  doc.text('Solde des mois précédents', bx+109, by+bh-7);
   doc.setFont('helvetica','bold'); doc.text(fmt(t.report), bx+bw-8, by+bh-7, { align:'right' });
 
   const head = { fillColor:[240,237,230], textColor:ink, fontStyle:'bold', fontSize:7.5, halign:'center', cellPadding:1.6 };
