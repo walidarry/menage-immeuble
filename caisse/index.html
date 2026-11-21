@@ -220,7 +220,7 @@
   </section>
 
   <section class="card">
-    <div class="card-head"><span class="card-title">Dépenses</span><span class="card-meta" id="dep-meta"></span></div>
+    <div class="card-head"><span class="card-title">المصاريف</span><span class="card-meta" id="dep-meta"></span></div>
     <div class="dep-form" id="dep-form">
       <input type="text" id="dep-desig" dir="auto" list="dep-suggest" placeholder="Désignation (ex : Femme de ménage novembre)" autocomplete="off">
       <datalist id="dep-suggest">
@@ -296,6 +296,10 @@ const LS_KEY      = "caisse_imm19_cache";
 const CAT_LABEL   = { menage:"Femme de ménage", produit:"Produits de ménage", elec:"Électricité escalier", ampoule:"Changement ampoule", travaux:"Travaux", autre:"Autre" };
 const CAT_GROUP   = { menage:"menage", produit:"produit", elec:"elec", ampoule:"travaux", travaux:"travaux", autre:"travaux" };
 const MOIS        = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+const MOIS_AR     = ["يناير","فبراير","مارس","أبريل","ماي","يونيو","يوليوز","غشت","شتنبر","أكتوبر","نونبر","دجنبر"];
+function mAr(k) { const [y,m] = k.split('-').map(Number); return MOIS_AR[m-1]; }
+function mLabelAr(k) { return mAr(k) + ' ' + k.slice(0,4); }
+function fmtAr(n) { return nb(n) + ' درهم'; }
 const MOIS_COURT  = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Aoû","Sep","Oct","Nov","Déc"];
 
 const DEFAULT_CATS = [
@@ -485,7 +489,7 @@ function render() {
   const moisNom = mLabel(t.mk).split(' ')[0].toLowerCase();
   let c = '';
   document.getElementById('c-prev').textContent = fmt(t.report);
-  c += `<div class="calc-row"><span>Encaissé en ${moisNom}</span><span class="num">${fmt(t.enc)}</span></div>`;
+  c += `<div class="calc-row" dir="rtl"><span class="lbl">مداخيل شهر ${mAr(t.mk)}</span><span class="num" dir="ltr">${fmt(t.enc)}</span></div>`;
   const nL = t.lines.length;
   c += t.lines.map((l, i) => `<div class="calc-row minus cat-line"${hasAr(l.label) ? ' dir="rtl"' : ''}><span class="lbl" onclick="openCat('${l.id}')">- ${esc(l.label)}</span><span class="mv" dir="ltr"><button type="button" aria-label="Monter" ${i===0?'disabled':''} onclick="moveCat('${l.id}',-1)">▲</button><button type="button" aria-label="Descendre" ${i===nL-1?'disabled':''} onclick="moveCat('${l.id}',1)">▼</button></span><span class="num" dir="ltr">${fmt(l.montant)}</span></div>`).join('');
   document.getElementById('calc').innerHTML = c;
@@ -495,16 +499,16 @@ function render() {
 
   // Dépenses
   const deps = [...data.depenses].sort(byDateDesc);
-  document.getElementById('dep-meta').textContent = deps.length + ' opération' + (deps.length>1?'s':'');
+  document.getElementById('dep-meta').textContent = deps.length + (deps.length === 1 ? ' عملية' : ' عمليات');
   const groups = depGroups();
   if (openMonths === null) openMonths = new Set(groups.length ? [groups[0].mk] : []);
   document.getElementById('dep-body').innerHTML = deps.length === 0
-    ? '<div class="empty">Aucune dépense pour l\'instant.</div>'
-    : '<table class="list rtl" dir="rtl"><thead><tr><th>Mois</th><th>Désignation</th><th class="r">Montant</th><th></th></tr></thead><tbody>' +
+    ? '<div class="empty" dir="rtl">لا توجد مصاريف حالياً.</div>'
+    : '<table class="list rtl" dir="rtl"><thead><tr><th>الشهر</th><th>البيان</th><th class="r">المبلغ</th><th></th></tr></thead><tbody>' +
       groups.map(g => {
         const open = openMonths.has(g.mk);
-        let r = `<tr class="mrow${open?' open':''}" onclick="toggleMonth('${g.mk}')"><td>${CHEVRON} ${mLabel(g.mk)}</td><td>Dépenses du mois de ${mLabel(g.mk).split(' ')[0].toLowerCase()}</td><td class="r num" dir="ltr">${fmt(g.total)}</td><td></td></tr>`;
-        if (open) r += g.items.map(d => `<tr class="drow"><td class="num" dir="ltr" style="text-align:right">${frDate(d.date)}</td><td class="ar" dir="auto">${esc(depLabel(d))}</td><td class="r num" dir="ltr">${fmt(d.montant)}</td><td class="r"><button class="del" aria-label="Supprimer" onclick="event.stopPropagation();delItem('depenses','${d.id}')">×</button></td></tr>`).join('');
+        let r = `<tr class="mrow${open?' open':''}" onclick="toggleMonth('${g.mk}')"><td>${CHEVRON} ${mLabelAr(g.mk)}</td><td>مصاريف شهر ${mAr(g.mk)}</td><td class="r num">${fmtAr(g.total)}</td><td></td></tr>`;
+        if (open) r += g.items.map(d => `<tr class="drow"><td class="num" dir="ltr" style="text-align:right">${frDate(d.date)}</td><td class="ar" dir="auto">${esc(depLabel(d))}</td><td class="r num">${fmtAr(d.montant)}</td><td class="r"><button class="del" aria-label="Supprimer" onclick="event.stopPropagation();delItem('depenses','${d.id}')">×</button></td></tr>`).join('');
         return r;
       }).join('') +
       '</tbody></table>';
@@ -787,7 +791,7 @@ function makePdf() {
   // Bloc caisse : mouvements du mois + report
   const moisNom = mLabel(t.mk).split(' ')[0].toLowerCase();
   const left = [];
-  left.push(['Encaissé en ' + moisNom, fmt(t.enc)]);
+  left.push(['مداخيل شهر ' + mAr(t.mk), fmt(t.enc)]);
   t.lines.forEach(l => left.push(['- ' + l.label, fmt(l.montant)]));
   // Bloc vert de droite à gauche : détails à droite, caisse à gauche
   const bx = M, by = 25, bw = W-2*M, bh = Math.max(42, 8 + left.length * 5.4 + 2);
@@ -849,41 +853,47 @@ function makePdf() {
   // Dépenses
   yy += 10;
   if (yy > 265) { doc.addPage(); yy = 18; }
-  sec('Dépenses', yy);
+  // Titre « المصاريف » à droite
+  doc.setFontSize(10.5); doc.setTextColor(...ink); doc.setFont('helvetica','bold');
+  pdfText(doc, 'المصاريف', W-M, yy, { align:'right', scale: 1.25, bold: true });
   const groups = depGroups();
   const pBody = [], kinds = [];
-  // Tableau des dépenses de droite à gauche : Montant | Désignation | Mois
+  // Tableau des dépenses de droite à gauche, tout en arabe : المبلغ | البيان | الشهر
   groups.forEach((g, i) => {
     const open = openMonths && openMonths.has(g.mk);
-    pBody.push([fmt(g.total), 'Dépenses du mois de ' + mLabel(g.mk).split(' ')[0].toLowerCase(), mLabel(g.mk) + '     ']); kinds.push(open ? 'month-open' : 'month');
-    if (open) g.items.forEach(d => { pBody.push([fmt(d.montant), depLabel(d), frDate(d.date) + '     ']); kinds.push('detail'); });
+    pBody.push([fmtAr(g.total), 'مصاريف شهر ' + mAr(g.mk), mLabelAr(g.mk)]); kinds.push(open ? 'month-open' : 'month');
+    if (open) g.items.forEach(d => { pBody.push([fmtAr(d.montant), depLabel(d), frDate(d.date) + '     ']); kinds.push('detail'); });
   });
   doc.autoTable({
     startY: yy + 2, margin:{ left:M, right:M },
-    head: [['Montant','Désignation','Mois']],
-    body: pBody.length ? pBody : [['','Aucune dépense','']],
+    head: [['المبلغ','البيان','الشهر']],
+    body: pBody.length ? pBody : [['','لا توجد مصاريف','']],
     theme:'plain',
-    headStyles: { ...head, fillColor:[255,255,255], halign:'right', fontSize:8.5, cellPadding:2 },
-    styles: { fontSize:8.5, cellPadding:2, textColor:ink, lineColor:[221,217,208], lineWidth:{ bottom:0.15 }, halign:'right' },
-    columnStyles: { 0:{ halign:'left', cellWidth:28 }, 2:{ cellWidth:34 } },
+    headStyles: { ...head, fillColor:[255,255,255], halign:'right', fontSize:8.5, cellPadding:2.4 },
+    styles: { fontSize:8.5, cellPadding:2.4, textColor:ink, lineColor:[221,217,208], lineWidth:{ bottom:0.15 }, halign:'right' },
+    columnStyles: { 0:{ halign:'left', cellWidth:30 }, 2:{ cellWidth:36 } },
     didParseCell: (h) => {
-      if (h.section==='head' && h.column.index===0) h.cell.styles.halign = 'left';
       if (h.section==='body' && pBody.length) {
         if (kinds[h.row.index].startsWith('month')) h.cell.styles.fontStyle = 'bold';
         else { h.cell.styles.textColor = grey; h.cell.styles.fontSize = 8; h.cell.styles.fillColor = [251,250,248]; }
-        // Texte arabe : la cellule reste vide ici, il est dessiné en image juste après
-        if (hasAr(h.cell.raw)) { h.cell.arText = String(h.cell.raw); h.cell.text = [' ']; }
       }
+      // Texte arabe : la cellule reste vide ici, il est dessiné en image juste après
+      if (hasAr(h.cell.raw)) { h.cell.arText = String(h.cell.raw); h.cell.text = [' ']; }
     },
     didDrawCell: (h) => {
-      if (h.section === 'body' && h.cell.arText) {
+      if (h.cell.arText) {
         const fs = h.cell.styles.fontSize;
+        const detail = h.section === 'body' && pBody.length && kinds[h.row.index] === 'detail';
+        const bold = h.section === 'head' || (h.section === 'body' && pBody.length && !detail);
         doc.setFontSize(fs);
-        pdfText(doc, h.cell.arText, h.cell.x + h.cell.width - 2, h.cell.y + h.cell.height/2 + fs*0.13, { maxW: h.cell.width - 4, scale: 1.45, rgb: kinds[h.row.index] === 'detail' ? [40,38,34] : ink, align: 'right' });
+        const left = h.column.index === 0;
+        pdfText(doc, h.cell.arText, left ? h.cell.x + 2 : h.cell.x + h.cell.width - 2 - (h.section==='body' && h.column.index===2 ? 4 : 0),
+                h.cell.y + h.cell.height/2 + fs*0.13,
+                { maxW: h.cell.width - 4, scale: left ? (detail ? 1.1 : 1.2) : (detail ? 1.45 : 1.25), bold, rgb: detail ? [40,38,34] : ink, align: left ? undefined : 'right' });
       }
       if (h.section !== 'body' || h.column.index !== 2 || !pBody.length) return;
       const k = kinds[h.row.index]; if (!k.startsWith('month')) return;
-      const x = h.cell.x + h.cell.width - 3.5, cy = h.cell.y + h.cell.height/2;
+      const x = h.cell.x + h.cell.width - 3, cy = h.cell.y + h.cell.height/2;
       doc.setDrawColor(150,146,140); doc.setLineWidth(0.3); doc.setLineCap('round'); doc.setLineJoin('round');
       if (k === 'month-open') doc.lines([[0.9,0.9],[0.9,-0.9]], x-0.9, cy-0.45);
       else doc.lines([[-0.9,0.9],[0.9,0.9]], x+0.4, cy-0.9);
@@ -891,13 +901,13 @@ function makePdf() {
   });
   if (groups.some(g => !(openMonths && openMonths.has(g.mk)))) {
     doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...grey);
-    doc.text('Le détail des mois réduits est consultable sur la page en ligne.', M, doc.lastAutoTable.finalY + 4);
+    pdfText(doc, 'تفاصيل الأشهر المطوية موجودة على الصفحة', W-M, doc.lastAutoTable.finalY + 4, { align:'right' });
   }
 
   const n = doc.getNumberOfPages();
   for (let i=1; i<=n; i++) {
     doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...grey);
-    doc.text('Immeuble 19 - Caisse de l\'immeuble (v4)' + (n>1 ? '   |   Page ' + i + '/' + n : ''), W/2, 290, { align:'center' });
+    doc.text('Immeuble 19 - Caisse de l\'immeuble (v5)' + (n>1 ? '   |   Page ' + i + '/' + n : ''), W/2, 290, { align:'center' });
   }
   const d = todayIso().split('-');
   doc.save('Caisse_Immeuble19_' + d[2] + '-' + d[1] + '-' + d[0] + '.pdf');
