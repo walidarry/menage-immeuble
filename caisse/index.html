@@ -272,6 +272,10 @@
   <div class="modal">
     <h2 id="cat-title">Ligne de dépense</h2>
     <div class="field"><label for="cat-label">Nom affiché dans la caisse (français ou arabe)</label><input type="text" id="cat-label" dir="auto" placeholder="ex : Travaux porte d'entrée" onkeydown="if(event.key==='Enter') saveCat()"></div>
+    <div class="two" id="cat-new-fields">
+      <div class="field"><label for="cat-montant">Montant (Dhs)</label><input type="text" inputmode="decimal" class="amt" id="cat-montant" placeholder="0"></div>
+      <div class="field"><label for="cat-date">Date</label><input type="date" id="cat-date"></div>
+    </div>
     <div class="error-msg" id="cat-err"></div>
     <div class="modal-btns"><button class="b-danger" id="cat-del" onclick="delCat()">Supprimer</button><button class="b-cancel" onclick="closeM('m-cat')">Annuler</button><button class="b-ok" onclick="saveCat()">Enregistrer</button></div>
   </div>
@@ -676,6 +680,9 @@ function openCat(id) {
   document.getElementById('cat-label').value = c ? c.label : '';
   document.getElementById('cat-err').style.display = 'none';
   document.getElementById('cat-del').style.display = c ? '' : 'none';
+  document.getElementById('cat-new-fields').style.display = c ? 'none' : '';
+  document.getElementById('cat-montant').value = '';
+  document.getElementById('cat-date').value = todayIso();
   openM('m-cat');
   setTimeout(() => document.getElementById('cat-label').focus(), 100);
 }
@@ -684,7 +691,15 @@ function saveCat() {
   const label = document.getElementById('cat-label').value.trim();
   if (!label) return catErr('Indique le nom de la ligne.');
   if (editCatId) data.categories = data.categories.map(c => c.id === editCatId ? { ...c, label } : c);
-  else data.categories = [...data.categories, { id: 'c' + uid(), label }];
+  else {
+    const raw = latinDigits(document.getElementById('cat-montant').value).trim();
+    const montant = Number(raw);
+    if (raw !== '' && (isNaN(montant) || montant < 0)) return catErr('Montant invalide.');
+    const id = 'c' + uid();
+    data.categories = [...data.categories, { id, label }];
+    // La nouvelle ligne est créée avec sa dépense (titre + montant)
+    if (montant > 0) data.depenses.push({ id: uid(), cat: id, designation: label, montant, date: document.getElementById('cat-date').value || todayIso() });
+  }
   closeM('m-cat'); save();
 }
 function delCat() {
